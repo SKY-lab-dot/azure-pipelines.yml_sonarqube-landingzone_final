@@ -62,8 +62,8 @@ stages:
   jobs:
   - job: Scanning
     displayName: "Run tflint & tfsec"
-    pool:
-      vmImage: 'ubuntu-latest'
+    # pool:
+    #   name: self-hosted
     steps:
       - checkout: self
 
