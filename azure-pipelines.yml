@@ -69,10 +69,11 @@ stages:
     
     - task: CmdLine@2
       inputs:
+        workingDirectory: "Parent_Module/dev"
         script: |
           tflint 
           tfsec .
-        workingDirectory: "Parent_Module/dev"
+        
 
 # ================= Deploy Stage =================
 - stage: Deploy
