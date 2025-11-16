@@ -65,11 +65,14 @@ stages:
     # pool:
     #   name: self-hosted
     steps:
-    - task: tfsec@1
-      displayName: tfsec
+    - task: PowerShell@2
       inputs:
-        version: 'v1.26.0'
-        args: 'tfsec'
+        targetType: 'inline'
+        script: |
+          curl -LO https://github.com/aquasecurity/tfsec/releases/download/v1.26.0/tfsec-windows-amd64.exe
+          mv tfsec-windows-amd64.exe tfsec.exe
+          ./tfsec.exe D:\DevOps\Tarraform_code -f junit,json -o tfsec-results
+
     - task: CmdLine@2
       inputs:
         script: |
