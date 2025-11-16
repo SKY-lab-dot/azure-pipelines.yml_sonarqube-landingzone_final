@@ -65,21 +65,14 @@ stages:
     # pool:
     #   name: self-hosted
     steps:
-    - task: tfsec@1
-      displayName: tfsec
-      inputs:
-        version: 'latest'
-        dir: 'Parent_Module/dev'
+
     
     - task: CmdLine@2
       inputs:
         script: |
-          tflint
-        workingDirectory: 'Parent_Module/dev'
-    
-
-
-
+          tflint 
+          tfsec .
+        workingDirectory: "Parent_Module/dev"
 
 # ================= Deploy Stage =================
 - stage: Deploy
