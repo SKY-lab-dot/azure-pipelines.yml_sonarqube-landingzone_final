@@ -1,0 +1,62 @@
+trigger:
+- none
+
+pool:
+ name: self-hosted
+
+variables:
+wd = "$(System.DefaultWorkingDirectory)/Parent_Module/dev"
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    steps:
+    - task: TerraformInstaller@1
+      displayName: Terraform install
+      inputs:
+        terraformVersion: 'latest'
+    - task: TerraformTask@5
+      displayName: terraform validate
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+    - task: TerraformTask@5
+      displayName: Terraform_init
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: 'wd'
+        backendServiceArm: 'Self-hosted'
+        backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+        backendAzureRmResourceGroupName: 'rg_strg'
+        backendAzureRmStorageAccountName: 'strgfortfstate'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'azure.tfstate'
+
+    - task: TerraformTask@5
+      displayName: Terraform_plan
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: 'wd'
+        environmentServiceNameAzureRM: 'Self-hosted'
+        environmentAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+
+- stage: Deploy
+  jobs:
+  - job: Deploy
+    steps:
+    - task: TerraformInstaller@1
+      displayName: terraform install
+      inputs:
+        terraformVersion: 'latest'
+    - task: TerraformTask@5
+      displayName: Terraform Apply 
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: 'wd'
+        environmentServiceNameAzureRM: 'Self-hosted'
+
+    
