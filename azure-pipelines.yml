@@ -58,7 +58,7 @@ stages:
 
 # ================= Scanning Stage =================
 - stage: Scanning
-  displayName: "Terraform Lint & Security Scan"
+  displayName: "Scanning"
   jobs:
   - job: Scanning
     displayName: "Run tflint & tfsec"
