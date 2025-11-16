@@ -65,60 +65,25 @@ stages:
     # pool:
     #   name: self-hosted
     steps:
-      - checkout: self
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Write your PowerShell commands here.
+          
+          cd wd
+          
+          tflint
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Write your PowerShell commands here.
+          
+          cd wd
+          
+          tfsec
 
-      # Install tflint
-# Install tflint
-      - task: PowerShell@2
-        displayName: "Install tflint"
-        inputs:
-          targetType: 'inline'
-          script: |
-            # Create folder for tflint
-            $installPath = "$env:ProgramFiles\tflint"
-            if (-Not (Test-Path $installPath)) { New-Item -ItemType Directory -Path $installPath }
-
-            # Download latest tflint Windows executable
-            $url = "https://github.com/terraform-linters/tflint/releases/latest/download/tflint_windows_amd64.zip"
-            $zipPath = "$env:TEMP\tflint.zip"
-            Invoke-WebRequest -Uri $url -OutFile $zipPath
-
-            # Extract zip
-            Add-Type -AssemblyName System.IO.Compression.FileSystem
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $installPath)
-
-            # Add tflint folder to PATH for this session
-            $env:PATH += ";$installPath"
-
-            # Verify installation
-            tflint --version
-
-      # Run tflint
-      - task: PowerShell@2
-        displayName: "Run tflint"
-        inputs:
-          targetType: 'inline'
-          script: |
-            tflint "$(wd)"
-
-
-
-            # Install tfsec
-            - task: Bash@3
-              displayName: "Install tfsec"
-              inputs:
-                targetType: 'inline'
-                script: |
-                  curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
-                  tfsec --version
-
-            # Run tfsec
-            - task: Bash@3
-              displayName: "Run tfsec"
-              inputs:
-                targetType: 'inline'
-                script: |
-                  tfsec $(wd)
 
 # ================= Deploy Stage =================
 - stage: Deploy
