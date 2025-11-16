@@ -23,6 +23,18 @@ stages:
         displayName: "Terraform install"
         inputs:
           terraformVersion: 'latest'
+      # Terraform init
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: '$wd'
+          backendServiceArm: 'Self-hosted'
+          backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+          backendAzureRmResourceGroupName: 'rg_strg'
+          backendAzureRmStorageAccountName: 'strgfortfstate'
+          backendAzureRmContainerName: 'tfstate'
+          backendAzureRmKey: 'azure,tfstate'
 
       # Terraform validate
       - task: TerraformTask@5
@@ -31,21 +43,7 @@ stages:
           provider: 'azurerm'
           command: 'validate'
           workingDirectory: '$(wd)'
-
-      # Terraform init
-      - task: TerraformTask@5
-        displayName: "Terraform init"
-        inputs:
-          provider: 'azurerm'
-          command: 'init'
-          workingDirectory: '$(wd)'
-          backendServiceArm: 'Self-hosted'
-          backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
-          backendAzureRmResourceGroupName: 'rg_strg'
-          backendAzureRmStorageAccountName: 'strgfortfstate'
-          backendAzureRmContainerName: 'tfstate'
-          backendAzureRmKey: 'azure.tfstate'
-
+          
       # Terraform plan
       - task: TerraformTask@5
         displayName: "Terraform plan"
