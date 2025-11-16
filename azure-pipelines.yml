@@ -68,21 +68,22 @@ stages:
       - checkout: self
 
       # Install tflint
-      - task: Bash@3
+      - task: PowerShell@2
         displayName: "Install tflint"
         inputs:
           targetType: 'inline'
           script: |
-            curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+            Invoke-WebRequest -Uri https://raw.githubusercontent.com/terraform-linters/tflint/master/install_windows.ps1 -OutFile install-tflint.ps1
+            & ./install-tflint.ps1
             tflint --version
 
-      # Run tflint
-      - task: Bash@3
+      - task: PowerShell@2
         displayName: "Run tflint"
         inputs:
           targetType: 'inline'
           script: |
             tflint $(wd)
+
 
       # Install tfsec
       - task: Bash@3
