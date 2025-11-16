@@ -89,6 +89,19 @@ stages:
         displayName: "Terraform install"
         inputs:
           terraformVersion: 'latest'
+      - task: TerraformTask@5
+        displayName: "Terraform init"
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: '$(wd)'
+          backendServiceArm: 'Self-hosted'
+          backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+          backendAzureRmResourceGroupName: 'rg_strg'
+          backendAzureRmStorageAccountName: 'strgfortfstate'
+          backendAzureRmContainerName: 'tfstate'
+          backendAzureRmKey: 'azure.tfstate'
+
 
       # Terraform apply
       - task: TerraformTask@5
