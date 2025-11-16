@@ -66,23 +66,45 @@ stages:
     #   name: self-hosted
     steps:
     - task: PowerShell@2
+      displayName: "Run tflint"
       inputs:
         targetType: 'inline'
         script: |
-          # Write your PowerShell commands here.
+          # Set working directory
+          $tfDir = "$(wd)"
           
-          cd wd
+          # Check if directory exists
+          if (-Not (Test-Path $tfDir)) {
+              Write-Error "Directory $tfDir does not exist."
+              exit 1
+          }
           
-          tflint
+          # Change directory
+          Set-Location "$tfDir"
+          
+          # Run tflint
+          tflint .
+
     - task: PowerShell@2
+      displayName: "Run tfsec"
       inputs:
         targetType: 'inline'
         script: |
-          # Write your PowerShell commands here.
+          # Set working directory
+          $tfDir = "$(wd)"
           
-          cd wd
+          # Check if directory exists
+          if (-Not (Test-Path $tfDir)) {
+              Write-Error "Directory $tfDir does not exist."
+              exit 1
+          }
           
-          tfsec
+          # Change directory
+          Set-Location "$tfDir"
+          
+          # Run tfsec
+          tfsec .
+
 
 
 # ================= Deploy Stage =================
