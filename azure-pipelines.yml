@@ -65,8 +65,7 @@ stages:
     # pool:
     #   name: self-hosted
     steps:
-
-    
+    - checkout: self
     - task: CmdLine@2
       inputs:
         workingDirectory: "Parent_Module/dev"
