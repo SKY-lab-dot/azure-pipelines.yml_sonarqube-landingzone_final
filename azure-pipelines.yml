@@ -1,112 +1,167 @@
 trigger:
-- none
+ branches:
+   include:
+     - main
 
 pool:
-  name: self-hosted
+ name: Self-hosted
 
 variables:
-  wd: "$(System.DefaultWorkingDirectory)/Parent_Module/dev"
 
+- group: Dev-Variable
+- group: Prod-Variable
+- group: Qa-Variable
+
+#  Dev Env
 stages:
+  - stage: DevDeploy
+    displayName:  Deploy to Dev
+    jobs:
+    - deployment: DevJob
+      environment: Dev
+      strategy: 
+       runOnce:
+         deploy:
+          steps:
+            - checkout: self
+            - task: TerraformInstaller@1
+              displayName: install terraform
+              inputs:
+                terraformVersion: 'latest'
+            - task: TerraformTask@5
+              displayName: terraform init
+              inputs:
+                provider: 'azurerm'
+                command: 'init'
+                workingDirectory: $(Work_Dir)
+                backendServiceArm: $(devServiceConnection)
+                backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+                backendAzureRmResourceGroupName: $(devrgname)
+                backendAzureRmStorageAccountName: $(devrgstrg)
+                backendAzureRmContainerName: $(devrgcontainer)
+                backendAzureRmKey: $(devrgbackkey)
+            
+            - task: TerraformTask@5
+              displayName: terraform validate
+              inputs:
+                provider: 'azurerm'
+                command: 'validate'
+                workingDirectory: $(Work_Dir)
 
-# ================= Build Stage =================
-- stage: Build
-  displayName: "Terraform Build"
-  jobs:
-  - job: Build
-    displayName: "Terraform Build Job"
-    steps:
-      - checkout: self
+            - task: TerraformTask@5
+              displayName: terraform plan
+              inputs:
+                provider: 'azurerm'
+                command: 'plan'
+                workingDirectory: $(Work_Dir)
 
-      # Install Terraform
-      - task: TerraformInstaller@1
-        displayName: "Terraform install"
-        inputs:
-          terraformVersion: 'latest'
+            - task: TerraformTask@5
+              displayName: terraform apply
+              inputs:
+                provider: 'azurerm'
+                command: 'apply'
+                workingDirectory: $(Work_Dir)
 
-      # Terraform init
-      - task: TerraformTask@5
-        displayName: "Terraform init"
-        inputs:
-          provider: 'azurerm'
-          command: 'init'
-          workingDirectory: '$(wd)'
-          backendServiceArm: 'Self-hosted'
-          backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
-          backendAzureRmResourceGroupName: 'rg_strg'
-          backendAzureRmStorageAccountName: 'strgfortfstate'
-          backendAzureRmContainerName: 'tfstate'
-          backendAzureRmKey: 'azure.tfstate'
+#  Prod Env      
 
-      # Terraform validate
-      - task: TerraformTask@5
-        displayName: "Terraform validate"
-        inputs:
-          provider: 'azurerm'
-          command: 'validate'
-          workingDirectory: '$(wd)'
-          
-      # Terraform plan
-      - task: TerraformTask@5
-        displayName: "Terraform plan"
-        inputs:
-          provider: 'azurerm'
-          command: 'plan'
-          workingDirectory: '$(wd)'
-          environmentServiceNameAzureRM: 'Self-hosted'
-          environmentAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+  - stage: ProdDeploy
+    displayName:  Deploy to Prod
+    dependsOn: DevDeploy
+    jobs:
+    - deployment: ProdJob
+      environment: Prod
+      strategy: 
+       runOnce:
+         deploy:
+          steps:
+            - checkout: self
+            - task: TerraformInstaller@1
+              displayName: install terraform
+              inputs:
+                terraformVersion: 'latest'
+            - task: TerraformTask@5
+              displayName: terraform init
+              inputs:
+                provider: 'azurerm'
+                command: 'init'
+                workingDirectory: $(Work_Dir)
+                backendServiceArm: $(prodServiceConnection)
+                backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+                backendAzureRmResourceGroupName: $(prodrgname)
+                backendAzureRmStorageAccountName: $(prodrgstrg)
+                backendAzureRmContainerName: $(prodrgcontainer)
+                backendAzureRmKey: $(prodrgbackkey)
+            
+            - task: TerraformTask@5
+              displayName: terraform validate
+              inputs:
+                provider: 'azurerm'
+                command: 'validate'
+                workingDirectory: $(Work_Dir)
 
-# ================= Scanning Stage =================
-- stage: Scanning
-  displayName: "Terraform Lint & Security Scan"
-  jobs:
-  - job: Scanning
-    displayName: "Run tflint & tfsec"
-    # pool:
-    #   name: self-hosted
-    steps:
-    - checkout: self
-    - task: CmdLine@2
-      inputs:
-        workingDirectory: "Parent_Module/dev"
-        script: |
-          tflint 
-          tfsec .
-        
+            - task: TerraformTask@5
+              displayName: terraform plan
+              inputs:
+                provider: 'azurerm'
+                command: 'plan'
+                workingDirectory: $(Work_Dir)
 
-# ================= Deploy Stage =================
-- stage: Deploy
-  displayName: "Terraform Deploy"
-  jobs:
-  - job: Deploy
-    displayName: "Terraform Apply Job"
-    steps:
-      - checkout: self
+            - task: TerraformTask@5
+              displayName: terraform apply
+              inputs:
+                provider: 'azurerm'
+                command: 'apply'
+                workingDirectory: $(Work_Dir)
 
-      # Install Terraform
-      - task: TerraformInstaller@1
-        displayName: "Terraform install"
-        inputs:
-          terraformVersion: 'latest'
-      - task: TerraformTask@5
-        displayName: "Terraform init"
-        inputs:
-          provider: 'azurerm'
-          command: 'init'
-          workingDirectory: '$(wd)'
-          backendServiceArm: 'Self-hosted'
-          backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
-          backendAzureRmResourceGroupName: 'rg_strg'
-          backendAzureRmStorageAccountName: 'strgfortfstate'
-          backendAzureRmContainerName: 'tfstate'
-          backendAzureRmKey: 'azure.tfstate'
+#  Qa Env  
+
+  - stage: QaDeploy
+    displayName:  Deploy to Qa
+    dependsOn: ProdDeploy
+    jobs:
+    - deployment: ProdJob
+      environment: Qa
+      strategy: 
+       runOnce:
+         deploy:
+          steps:
+            - checkout: self
+            - task: TerraformInstaller@1
+              displayName: install terraform
+              inputs:
+                terraformVersion: 'latest'
+            - task: TerraformTask@5
+              displayName: terraform init
+              inputs:
+                provider: 'azurerm'
+                command: 'init'
+                workingDirectory: $(Work_Dir)
+                backendServiceArm: $(qaServiceConnection)
+                backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+                backendAzureRmResourceGroupName: $(qargname)
+                backendAzureRmStorageAccountName: $(qargstrg)
+                backendAzureRmContainerName: $(qargcontainer)
+                backendAzureRmKey: $(qargbackkey)
+            
+            - task: TerraformTask@5
+              displayName: terraform validate
+              inputs:
+                provider: 'azurerm'
+                command: 'validate'
+                workingDirectory: $(Work_Dir)
+
+            - task: TerraformTask@5
+              displayName: terraform plan
+              inputs:
+                provider: 'azurerm'
+                command: 'plan'
+                workingDirectory: $(Work_Dir)
+
+            - task: TerraformTask@5
+              displayName: terraform apply
+              inputs:
+                provider: 'azurerm'
+                command: 'apply'
+                workingDirectory: $(Work_Dir)
 
 
-      # Terraform apply
-      - task: TerraformTask@5
-        displayName: "Terraform Apply"
-        inputs:
-          provider: 'azurerm'
-          command: 'apply'
-          workingDirectory: '$(wd)'
-          environmentServiceNameAzureRM: 'Self-hosted'
