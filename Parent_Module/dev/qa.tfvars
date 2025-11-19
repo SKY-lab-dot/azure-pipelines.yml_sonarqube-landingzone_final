@@ -1,8 +1,8 @@
 # Resource Group
 rg = {
   rg1 = {
-    rg_name    = "lz-qa-rg-app-westus2"
-    location   = "westus2"
+    rg_name    = "lz-qa-rg-app-centralindia"
+    location   = "centralindia"
     managed_by = "Terraform"
     tags = {
       environment = "qauction"
@@ -14,9 +14,9 @@ rg = {
 # Virtual Network
 vnet = {
   vnet1 = {
-    name                = "lz-qa-vnet-westus2"
-    resource_group_name = "lz-qa-rg-app-westus2"
-    location            = "westus2"
+    name                = "lz-qa-vnet-centralindia"
+    resource_group_name = "lz-qa-rg-app-centralindia"
+    location            = "centralindia"
     address_space       = ["10.0.0.0/16"]
     tags = {
       environment = "qauction"
@@ -30,15 +30,15 @@ vnet = {
 subnet = {
   frontend = {
     name                 = "lz-qa-subnet-frontend"
-    virtual_network_name = "lz-qa-vnet-westus2"
-    resource_group_name  = "lz-qa-rg-app-westus2"
+    virtual_network_name = "lz-qa-vnet-centralindia"
+    resource_group_name  = "lz-qa-rg-app-centralindia"
     address_prefixes     = ["10.0.1.0/24"]
   }
 
   backend = {
     name                 = "lz-qa-subnet-backend"
-    virtual_network_name = "lz-qa-vnet-westus2"
-    resource_group_name  = "lz-qa-rg-app-westus2"
+    virtual_network_name = "lz-qa-vnet-centralindia"
+    resource_group_name  = "lz-qa-rg-app-centralindia"
     address_prefixes     = ["10.0.2.0/24"]
   }
 }
@@ -48,10 +48,10 @@ nic = {
   frontend = {
     nic_name            = "lz-qa-nic-frontend"
     public_ip_name      = "lz-qa-pip-frontend"
-    resource_group_name = "lz-qa-rg-app-westus2"
-    location            = "westus2"
+    resource_group_name = "lz-qa-rg-app-centralindia"
+    location            = "centralindia"
     subnet_name         = "lz-qa-subnet-frontend"
-    vnet_name           = "lz-qa-vnet-westus2"
+    vnet_name           = "lz-qa-vnet-centralindia"
   
     tags = {
       environment = "qauction"
@@ -62,10 +62,10 @@ nic = {
   backend = {
     nic_name            = "lz-qa-nic-backend"
     public_ip_name      = "lz-qa-pip-backend"
-    resource_group_name = "lz-qa-rg-app-westus2"
-    location            = "westus2"
+    resource_group_name = "lz-qa-rg-app-centralindia"
+    location            = "centralindia"
     subnet_name         = "lz-qa-subnet-backend"
-    vnet_name           = "lz-qa-vnet-westus2"
+    vnet_name           = "lz-qa-vnet-centralindia"
     tags = {
       environment = "qauction"
       owner       = "sidharth"
@@ -81,8 +81,8 @@ vm = {
     # admin_username = "azureuser"
     # admin_password = "Password123!"
     nic_name       = "lz-qa-nic-frontend"
-    rg_name        = "lz-qa-rg-app-westus2"
-    location       = "westus2"
+    rg_name        = "lz-qa-rg-app-centralindia"
+    location       = "centralindia"
     tags = {
       environment = "qauction"
       owner       = "sidharth"
@@ -95,8 +95,8 @@ vm = {
     # admin_username = "azureuser"
     # admin_password = "Password123!"
     nic_name       = "lz-qa-nic-backend"
-    rg_name        = "lz-qa-rg-app-westus2"
-    location       = "westus2"
+    rg_name        = "lz-qa-rg-app-centralindia"
+    location       = "centralindia"
 
     tags = {
       environment = "qauction"
@@ -109,8 +109,8 @@ vm = {
 sql = {
   qa_sqlserver1 = {
     server_name                  = "lz-qa-sqlserver"
-    rg_name                      = "lz-qa-rg-app-westus2"
-    location                     = "westus2"
+    rg_name                      = "lz-qa-rg-app-centralindia"
+    location                     = "centralindia"
     version                      = "12.0"
     administrator_login          = "sqladmin"
     administrator_login_password = "Mysql@123"
@@ -123,7 +123,7 @@ databases = {
   db1 = {
     db_name        = "lz-qa-db1"
     server_name    = "lz-qa-sqlserver"
-    rg_name        = "lz-qa-rg-app-westus2"
+    rg_name        = "lz-qa-rg-app-centralindia"
     collation      = "SQL_Latin1_General_CP1_CI_AS"
     license_type   = "LicenseIncluded"
     max_size_gb    = 5
@@ -137,8 +137,8 @@ databases = {
 nsg = {
   frontend = {
     nsg_name            = "lz-qa-nsg-frontend"
-    location            = "westus2"
-    resource_group_name = "lz-qa-rg-app-westus2"
+    location            = "centralindia"
+    resource_group_name = "lz-qa-rg-app-centralindia"
     tags = {
       environment = "qauction"
       owner       = "sidharth"
@@ -147,8 +147,8 @@ nsg = {
 
   backend = {
     nsg_name            = "lz-qa-nsg-backend"
-    location            = "westus2"
-    resource_group_name = "lz-qa-rg-app-westus2"
+    location            = "centralindia"
+    resource_group_name = "lz-qa-rg-app-centralindia"
     tags = {
       environment = "qauction"
       owner       = "sidharth"
@@ -161,20 +161,20 @@ nic_nsg_ids = {
   nic_nsg_1 = {
     nic_name = "lz-qa-nic-frontend"
     nsg_name = "lz-qa-nsg-frontend"
-    rg_name  = "lz-qa-rg-app-westus2"
+    rg_name  = "lz-qa-rg-app-centralindia"
   }
   nic_nsg_2 = {
     nic_name = "lz-qa-nic-backend"
     nsg_name = "lz-qa-nsg-backend"
-    rg_name  = "lz-qa-rg-app-westus2"
+    rg_name  = "lz-qa-rg-app-centralindia"
   }
 }
 
 keyvaults = {
   kv1 = {
     name                = "frontendbackend02"
-    location            = "westus2"
-    resource_group_name = "lz-qa-rg-app-westus2"
+    location            = "centralindia"
+    resource_group_name = "lz-qa-rg-app-centralindia"
     sku_name            = "standard"
   }
 }
