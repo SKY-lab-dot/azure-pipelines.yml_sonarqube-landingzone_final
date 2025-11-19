@@ -54,7 +54,7 @@ stages:
                 provider: 'azurerm'
                 command: 'plan'
                 workingDirectory: $(Work_Dir)
-                backendServiceArm: $(devServiceConnection)
+                environmentServiceNameAzureRM: $(devServiceConnection)
 
             - task: TerraformTask@5
               displayName: terraform apply
@@ -62,7 +62,7 @@ stages:
                 provider: 'azurerm'
                 command: 'apply'
                 workingDirectory: $(Work_Dir)
-                backendServiceArm: $(devServiceConnection)
+                environmentServiceNameAzureRM: $(devServiceConnection)
 
 #  Prod Env      
 
@@ -107,7 +107,7 @@ stages:
                 provider: 'azurerm'
                 command: 'plan'
                 workingDirectory: $(Work_Dir)
-                backendServiceArm: $(prodServiceConnection)
+                environmentServiceNameAzureRM: $(prodServiceConnection)
 
             - task: TerraformTask@5
               displayName: terraform apply
@@ -115,7 +115,7 @@ stages:
                 provider: 'azurerm'
                 command: 'apply'
                 workingDirectory: $(Work_Dir)
-                backendServiceArm: $(prodServiceConnection)
+                environmentServiceNameAzureRM: $(prodServiceConnection)
 
 #  Qa Env  
 
@@ -160,7 +160,7 @@ stages:
                 provider: 'azurerm'
                 command: 'plan'
                 workingDirectory: $(Work_Dir)
-                backendServiceArm: $(qaServiceConnection)
+                environmentServiceNameAzureRM: $(qaServiceConnection)
 
             - task: TerraformTask@5
               displayName: terraform apply
@@ -168,6 +168,6 @@ stages:
                 provider: 'azurerm'
                 command: 'apply'
                 workingDirectory: $(Work_Dir)
-                backendServiceArm: $(qaServiceConnection)
+                environmentServiceNameAzureRM: $(qaServiceConnection)
 
 
