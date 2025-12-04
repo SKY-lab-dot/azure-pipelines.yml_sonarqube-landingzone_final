@@ -24,10 +24,10 @@ stages:
          deploy:
           steps:
             - checkout: self
-            - task: TerraformInstaller@1
-              displayName: install terraform
-              inputs:
-                terraformVersion: 'latest'
+            # - task: TerraformInstaller@1
+            #   displayName: install terraform
+            #   inputs:
+            #     terraformVersion: 'latest'
             - task: TerraformTask@5
               displayName: terraform init
               inputs:
