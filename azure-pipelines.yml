@@ -3,8 +3,9 @@ trigger:
    include:
      - main
 
+
 pool:
-  name: Self-hosted
+  name: linux-hosted
 
 variables:
 - group: Dev-Variable
