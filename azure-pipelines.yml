@@ -25,10 +25,10 @@ stages:
           steps:
             - checkout: self
 
-            - script: |
-                sudo apt-get update
-                sudo apt-get install -y unzip
-              displayName: Install unzip
+            # - script: |
+            #     sudo apt-get update
+            #     sudo apt-get install -y unzip
+            #   displayName: Install unzip
             - task: TerraformInstaller@1
               displayName: install terraform
               inputs:
@@ -84,10 +84,10 @@ stages:
           steps:
             - checkout: self
 
-            - script: |
-                sudo apt-get update
-                sudo apt-get install -y unzip
-              displayName: Install unzip
+            # - script: |
+            #     sudo apt-get update
+            #     sudo apt-get install -y unzip
+            #   displayName: Install unzip
 
             - task: TerraformInstaller@1
               displayName: install terraform
@@ -143,10 +143,10 @@ stages:
           steps:
             - checkout: self
 
-            - script: |
-                sudo apt-get update
-                sudo apt-get install -y unzip
-              displayName: Install unzip
+            # - script: |
+            #     sudo apt-get update
+            #     sudo apt-get install -y unzip
+            #   displayName: Install unzip
               
             - task: TerraformInstaller@1
               displayName: install terraform
