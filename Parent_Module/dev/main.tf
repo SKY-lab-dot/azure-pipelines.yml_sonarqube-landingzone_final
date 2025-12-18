@@ -11,23 +11,29 @@ module "vnet" {
 
 module "subnet" {
   depends_on = [module.vnet]
-  source     = "../../Child_Module/Subnet"
+  source     = "../../Child_Module/subnet"   # ✅ FIXED (was Subnet)
   subnet     = var.subnet
 }
 
 module "nic" {
   depends_on = [module.subnet]
-  source     = "../../Child_Module/PublicIP_NetworkInterface"
+  source     = "../../Child_Module/PublicIP_NetworkInterface"  # ✅ OK
   nic        = var.nic
- 
+}
+
+module "keyvault" {
+  depends_on = [module.resource_group]
+  source     = "../../Child_Module/keyvault"  # ✅ lowercase
+  keyvaults  = var.keyvaults
+  secrets    = var.secrets
 }
 
 module "virtual_machine" {
-  depends_on = [module.nic,module.keyvault]
+  depends_on = [module.nic, module.keyvault]
   source     = "../../Child_Module/Virtual_Machine"
-  vm = var.vm
-  keyvaults = var.keyvaults
-  secrets = var.secrets
+  vm         = var.vm
+  keyvaults  = var.keyvaults
+  secrets    = var.secrets
 }
 
 module "sql_server" {
@@ -38,31 +44,18 @@ module "sql_server" {
 
 module "databases" {
   depends_on = [module.sql_server]
-  source     = "../../Child_Module/Database"
+  source     = "../../Child_Module/database"   # ✅ FIXED (was Database)
   databases  = var.databases
 }
 
 module "nsg" {
-  depends_on = [ module.resource_group ]
-  source = "../../Child_Module/NSG"
-  nsg = var.nsg
-  
+  depends_on = [module.resource_group]
+  source     = "../../Child_Module/NSG"
+  nsg        = var.nsg
 }
 
 module "nic_nsg_assoc" {
-
-depends_on = [ module.nic, module.nsg ]
-  source = "../../Child_Module/azurerm_nic_nsg_assoc"
-
-  nic_nsg_ids           = var.nic_nsg_ids
-  
-}
-
-module "keyvault" {
-  depends_on = [ module.resource_group ]
-
-  source = "../../Child_Module/keyvault"
-  keyvaults = var.keyvaults
-  secrets = var.secrets
-  
+  depends_on = [module.nic, module.nsg]
+  source     = "../../Child_Module/azurerm_nic_nsg_assoc"  # ✅ FIXED name
+  nic_nsg_ids = var.nic_nsg_ids
 }
