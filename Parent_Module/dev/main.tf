@@ -36,17 +36,18 @@ module "virtual_machine" {
   secrets    = var.secrets
 }
 
-module "sql_server" {
-  depends_on = [module.resource_group]
-  source     = "../../Child_Module/SQL_Server"
-  sql        = var.sql
-}
 
-module "databases" {
-  depends_on = [module.sql_server]
-  source     = "../../Child_Module/database"   # ✅ FIXED (was Database)
-  databases  = var.databases
-}
+#module "sql_server" {
+ # depends_on = [module.resource_group]
+ # source     = "../../Child_Module/SQL_Server"
+  #sql        = var.sql
+#}
+
+#module "databases" {
+ # depends_on = [module.sql_server]
+  #source     = "../../Child_Module/database"   # ✅ FIXED (was Database)
+  #databases  = var.databases
+#}
 
 module "nsg" {
   depends_on = [module.resource_group]
