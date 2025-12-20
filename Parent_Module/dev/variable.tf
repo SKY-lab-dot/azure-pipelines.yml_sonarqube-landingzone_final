@@ -38,13 +38,13 @@ variable "subnet" {
 variable "nic" {
   description = "Network interface and public IP configuration"
   type = map(object({
-    nic_name              = string
-    public_ip_name        = string
-    resource_group_name   = string
-    location              = string
-    subnet_name           = string
-    vnet_name             = string
-       tags = object({
+    nic_name            = string
+    public_ip_name      = string
+    resource_group_name = string
+    location            = string
+    subnet_name         = string
+    vnet_name           = string
+    tags = object({
       environment = string
       owner       = string
     })
@@ -56,16 +56,16 @@ variable "nic" {
 variable "vm" {
   description = "Virtual Machine configuration"
   type = map(object({
-    vm_name              = string
-    size                 = string
-    nic_name             = string
-    rg_name              = string
-    location             = string
-    admin_username   = optional(string)
-    admin_password   = optional(string)
-    kv_name          = optional(string)
-    username_secret  = optional(string)
-    password_secret  = optional(string)
+    vm_name         = string
+    size            = string
+    nic_name        = string
+    rg_name         = string
+    location        = string
+    admin_username  = optional(string)
+    admin_password  = optional(string)
+    kv_name         = optional(string)
+    username_secret = optional(string)
+    password_secret = optional(string)
     tags = object({
       environment = string
       owner       = string
@@ -83,7 +83,7 @@ variable "sql" {
     administrator_login          = string
     administrator_login_password = string
     minimum_tls_version          = string
-    
+
   }))
 }
 
@@ -108,9 +108,9 @@ variable "databases" {
 variable "nsg" {
   description = "Network Security Group configuration"
   type = map(object({
-    nsg_name             = string
-    location             = string
-    resource_group_name  = string
+    nsg_name            = string
+    location            = string
+    resource_group_name = string
     tags = object({
       environment = string
       owner       = string
@@ -118,7 +118,7 @@ variable "nsg" {
   }))
 }
 
-variable nic_nsg_ids {
+variable "nic_nsg_ids" {
   description = "A map of objects containing NIC and NSG names along with their resource group names."
   type = map(object({
     nic_name = string

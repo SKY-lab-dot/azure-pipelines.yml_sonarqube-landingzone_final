@@ -52,7 +52,7 @@ nic = {
     location            = "westus2"
     subnet_name         = "lz-dev-subnet-frontend"
     vnet_name           = "lz-dev-vnet-westus2"
-  
+
     tags = {
       environment = "devuction"
       owner       = "sidharth"
@@ -76,13 +76,13 @@ nic = {
 # Virtual Machines
 vm = {
   frontend = {
-    vm_name        = "lz-dev-vm-frontend"
-    size           = "Standard_B2s"
+    vm_name = "lz-dev-vm-frontend"
+    size    = "Standard_B2s"
     # admin_username = "azureuser"
     # admin_password = "Password123!"
-    nic_name       = "lz-dev-nic-frontend"
-    rg_name        = "lz-dev-rg-app-westus2"
-    location       = "westus2"
+    nic_name = "lz-dev-nic-frontend"
+    rg_name  = "lz-dev-rg-app-westus2"
+    location = "westus2"
     tags = {
       environment = "devuction"
       owner       = "sidharth"
@@ -90,13 +90,13 @@ vm = {
   }
 
   backend = {
-    vm_name        = "lz-dev-vm-backend"
-    size           = "Standard_B2s"
+    vm_name = "lz-dev-vm-backend"
+    size    = "Standard_B2s"
     # admin_username = "azureuser"
     # admin_password = "Password123!"
-    nic_name       = "lz-dev-nic-backend"
-    rg_name        = "lz-dev-rg-app-westus2"
-    location       = "westus2"
+    nic_name = "lz-dev-nic-backend"
+    rg_name  = "lz-dev-rg-app-westus2"
+    location = "westus2"
 
     tags = {
       environment = "devuction"
