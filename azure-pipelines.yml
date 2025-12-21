@@ -78,7 +78,7 @@ stages:
 
   - stage: ProdDeploy
     variables:
-    - group: Prod
+      - group: Prod
     displayName:  Deploy to Prod
     dependsOn: DevDeploy
     jobs:
@@ -139,7 +139,7 @@ stages:
 
   - stage: QaDeploy
     variables:
-    - group: Qa
+      - group: Qa
     displayName:  Deploy to Qa
     dependsOn: ProdDeploy
     jobs:
