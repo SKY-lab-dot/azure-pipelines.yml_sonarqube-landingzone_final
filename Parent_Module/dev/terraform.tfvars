@@ -11,6 +11,7 @@ rg = {
   }
 }
 
+
 # Virtual Network
 vnet = {
   vnet1 = {
