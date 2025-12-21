@@ -172,7 +172,7 @@ nic_nsg_ids = {
 
 keyvaults = {
   kv1 = {
-    name                = "frontendbackend02"
+    name                = "frontendbackend012"
     location            = "westus2"
     resource_group_name = "lz-dev-rg-app-westus2"
     sku_name            = "standard"
