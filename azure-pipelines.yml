@@ -100,7 +100,7 @@ stages:
                 command: 'init'
                 workingDirectory: $(Work_Dir)
                 backendServiceArm: $(prodServiceConnection)
-                backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+                backendAzureRmOverrideSubscriptionID: $(SubscriptionID)
                 backendAzureRmResourceGroupName: $(prodrgname)
                 backendAzureRmStorageAccountName: $(prodrgstrg)
                 backendAzureRmContainerName: $(prodrgcontainer)
@@ -159,7 +159,7 @@ stages:
                 command: 'init'
                 workingDirectory: $(Work_Dir)
                 backendServiceArm: $(qaServiceConnection)
-                backendAzureRmOverrideSubscriptionID: 'c03f6878-4621-428c-b360-d9282cbb1a98'
+                backendAzureRmOverrideSubscriptionID: $(SubscriptionID)
                 backendAzureRmResourceGroupName: $(qargname)
                 backendAzureRmStorageAccountName: $(qargstrg)
                 backendAzureRmContainerName: $(qargcontainer)
