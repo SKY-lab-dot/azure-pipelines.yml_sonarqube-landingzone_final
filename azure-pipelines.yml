@@ -17,6 +17,8 @@ variables:
 #  Dev Env
 stages:
   - stage: DevDeploy
+    variables:
+      - group: Dev
     displayName:  Deploy to Dev
     jobs:
     - deployment: DevJob
@@ -75,6 +77,8 @@ stages:
 #  Prod Env      
 
   - stage: ProdDeploy
+    variables:
+    - group: Prod
     displayName:  Deploy to Prod
     dependsOn: DevDeploy
     jobs:
@@ -134,6 +138,8 @@ stages:
 #  Qa Env  
 
   - stage: QaDeploy
+    variables:
+    - group: Qa
     displayName:  Deploy to Qa
     dependsOn: ProdDeploy
     jobs:
