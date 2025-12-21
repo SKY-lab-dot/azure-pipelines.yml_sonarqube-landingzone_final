@@ -5,12 +5,14 @@ trigger:
 
 
 pool:
-  name: linux-hosted
+  name: default
 
 variables:
-- group: Dev-Variable
-- group: Prod-Variable
-- group: Qa-Variable
+  - group: Dev
+  - group: Prod
+  - group: Qa
+
+
 
 #  Dev Env
 stages:
