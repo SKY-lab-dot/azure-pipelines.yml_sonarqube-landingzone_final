@@ -15,3 +15,15 @@ provider "azurerm" {
 
   subscription_id = "5235c2c1-03cf-4091-87b8-e8adb1a1c5f6"
 }
+
+provider "azurerm" {
+  features {}
+  subscription_id = "5235c2c1-03cf-4091-87b8-e8adb1a1c5f6"
+  alias           = "dev"
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = "11111111-2222-3333-4444-555555555555"
+  alias           = "prod"
+}
