@@ -1,0 +1,44 @@
+trigger:
+- main
+
+pool:
+  name: Azurecicd
+
+steps:
+
+- checkout: self
+
+- task: TerraformInstaller@1
+  displayName: 'Terraform Install'
+  inputs:
+    terraformVersion: 'latest'
+
+- task: TerraformTask@5
+  displayName: 'Terraform Init'
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    backendServiceArm: 'shailesh'
+    backendAzureRmResourceGroupName: 'sit'
+    backendAzureRmStorageAccountName: 'sitterraformstate2026'
+    backendAzureRmContainerName: 'tfstate'
+    backendAzureRmKey: 'sit.terraform.tfstate'
+
+- task: TerraformTask@5
+  displayName: 'Terraform Validate'
+  inputs:
+    provider: 'azurerm'
+    command: 'validate'
+
+- task: TerraformTask@5
+  displayName: 'Terraform Plan'
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    environmentServiceNameAzureRM: 'shailesh'
+- task: TerraformTask@5
+  displayName: terraform apply
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    environmentServiceNameAzureRM: 'shailesh'
