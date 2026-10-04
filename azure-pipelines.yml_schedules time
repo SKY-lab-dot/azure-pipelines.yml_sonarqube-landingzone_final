@@ -1,4 +1,5 @@
 trigger:
+non
   branches:
     include:
     - main
