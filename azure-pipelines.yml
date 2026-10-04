@@ -1,199 +1,192 @@
 trigger:
- branches:
-   include:
-     - main
-
+- main
 
 pool:
-  name: Default
+  name: Azurecicd
 
 variables:
-  - group: Dev
-  - group: Prod
-  - group: Qa
+- group: dev
 
-
-
-#  Dev Env
 stages:
-  - stage: DevDeploy
-    variables:
-      - group: Dev
-    displayName:  Deploy to Dev
-    jobs:
-    - deployment: DevJob
-      environment: Dev
-      strategy: 
-       runOnce:
-         deploy:
-          steps:
-            - checkout: self
 
-            # - script: |
-            #     sudo apt-get update
-            #     sudo apt-get install -y unzip
-            #   displayName: Install unzip
-            - task: TerraformInstaller@1
-              displayName: install terraform
-              inputs:
-                terraformVersion: 'latest'
-      
-            - task: TerraformTask@5
-              displayName: terraform init
-              inputs:
-                provider: 'azurerm'
-                command: 'init'
-                workingDirectory: $(Work_Dir)
-                backendServiceArm: $(devServiceConnection)
-                backendAzureRmOverrideSubscriptionID: $(SubscriptionID)
-                backendAzureRmResourceGroupName: $(devrgname)
-                backendAzureRmStorageAccountName: $(devrgstrg)
-                backendAzureRmContainerName: $(devrgcontainer)
-                backendAzureRmKey: $(devrgbackkey)
-            
-            - task: TerraformTask@5
-              displayName: terraform validate
-              inputs:
-                provider: 'azurerm'
-                command: 'validate'
-                workingDirectory: $(Work_Dir)
+# =========================================================
+# DEV - FRONTEND VM
+# =========================================================
 
-            - task: TerraformTask@5
-              displayName: terraform plan
-              inputs:
-                provider: 'azurerm'
-                command: 'plan'
-                workingDirectory: $(Work_Dir)
-                environmentServiceNameAzureRM: $(devServiceConnection)
+- stage: Dev_Frontend
+  displayName: 'DEV - Frontend Deployment'
 
-            - task: TerraformTask@5
-              displayName: terraform apply
-              inputs:
-                provider: 'azurerm'
-                command: 'apply'
-                workingDirectory: $(Work_Dir)
-                environmentServiceNameAzureRM: $(devServiceConnection)
+  jobs:
+  - job: Deploy_Frontend
+    displayName: 'Deploy Code to frontvm'
 
-#  Prod Env      
+    steps:
 
-  - stage: ProdDeploy
-    variables:
-      - group: Prod
-    displayName:  Deploy to Prod
-    dependsOn: DevDeploy
-    jobs:
-    - deployment: ProdJob
-      environment: Prod
-      strategy: 
-       runOnce:
-         deploy:
-          steps:
-            - checkout: self
+    - checkout: self
 
-            # - script: |
-            #     sudo apt-get update
-            #     sudo apt-get install -y unzip
-            #   displayName: Install unzip
+    - powershell: |
+        Write-Host "=========================================="
+        Write-Host "DEV FRONTEND DEPLOYMENT"
+        Write-Host "=========================================="
+        Write-Host "VM: frontvm"
+        Write-Host "Build ID: $(Build.BuildId)"
+        Write-Host "Branch: $(Build.SourceBranch)"
+        Write-Host "Repository: $(Build.Repository.Name)"
+        Write-Host "=========================================="
+      displayName: 'DEV Frontend Information'
 
-            - task: TerraformInstaller@1
-              displayName: install terraform
-              inputs:
-                terraformVersion: 'latest'
-            - task: TerraformTask@5
-              displayName: terraform init
-              inputs:
-                provider: 'azurerm'
-                command: 'init'
-                workingDirectory: $(Work_Dir)
-                backendServiceArm: $(prodServiceConnection)
-                backendAzureRmOverrideSubscriptionID: $(SubscriptionID)
-                backendAzureRmResourceGroupName: $(prodrgname)
-                backendAzureRmStorageAccountName: $(prodrgstrg)
-                backendAzureRmContainerName: $(prodrgcontainer)
-                backendAzureRmKey: $(prodrgbackkey)
-            
-            - task: TerraformTask@5
-              displayName: terraform validate
-              inputs:
-                provider: 'azurerm'
-                command: 'validate'
-                workingDirectory: $(Work_Dir)
+    # Copy repository code to frontend VM
+    - task: CopyFilesOverSSH@0
+      displayName: 'Copy Code to frontvm'
+      inputs:
+        sshEndpoint: 'ssh-frontvm'
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          **/*
+          !.git/**
+          !.git/**/*
+          !.terraform/**
+          !.terraform/**/*
+          !terraform.tfstate
+          !terraform.tfstate.*
+          !backend.tfvars
+          !azure-pipelines.yml
+        targetFolder: '/tmp/dev-frontend'
+        readyTimeout: '20000'
 
-            - task: TerraformTask@5
-              displayName: terraform plan
-              inputs:
-                provider: 'azurerm'
-                command: 'plan'
-                workingDirectory: $(Work_Dir)
-                environmentServiceNameAzureRM: $(prodServiceConnection)
+    # Deploy code and restart Nginx
+    - task: SSH@0
+      displayName: 'Deploy on frontvm'
+      inputs:
+        sshEndpoint: 'ssh-frontvm'
+        runOptions: 'inline'
+        readyTimeout: '20000'
+        inline: |
+          set -e
 
-            - task: TerraformTask@5
-              displayName: terraform apply
-              inputs:
-                provider: 'azurerm'
-                command: 'apply'
-                workingDirectory: $(Work_Dir)
-                environmentServiceNameAzureRM: $(prodServiceConnection)
+          echo "=========================================="
+          echo "DEV FRONTEND DEPLOYMENT STARTED"
+          echo "=========================================="
 
-#  Qa Env  
+          echo "Checking Nginx..."
+          sudo nginx -t
 
-  - stage: QaDeploy
-    variables:
-      - group: Qa
-    displayName:  Deploy to Qa
-    dependsOn: ProdDeploy
-    jobs:
-    - deployment: ProdJob
-      environment: Qa
-      strategy: 
-       runOnce:
-         deploy:
-          steps:
-            - checkout: self
+          echo "Creating web directory..."
+          sudo mkdir -p /var/www/html
 
-            # - script: |
-            #     sudo apt-get update
-            #     sudo apt-get install -y unzip
-            #   displayName: Install unzip
-              
-            - task: TerraformInstaller@1
-              displayName: install terraform
-              inputs:
-                terraformVersion: 'latest'
-            - task: TerraformTask@5
-              displayName: terraform init
-              inputs:
-                provider: 'azurerm'
-                command: 'init'
-                workingDirectory: $(Work_Dir)
-                backendServiceArm: $(qaServiceConnection)
-                backendAzureRmOverrideSubscriptionID: $(SubscriptionID)
-                backendAzureRmResourceGroupName: $(qargname)
-                backendAzureRmStorageAccountName: $(qargstrg)
-                backendAzureRmContainerName: $(qargcontainer)
-                backendAzureRmKey: $(qargbackkey)
-            
-            - task: TerraformTask@5
-              displayName: terraform validate
-              inputs:
-                provider: 'azurerm'
-                command: 'validate'
-                workingDirectory: $(Work_Dir)
+          echo "Removing old application..."
+          sudo rm -rf /var/www/html/*
 
-            - task: TerraformTask@5
-              displayName: terraform plan
-              inputs:
-                provider: 'azurerm'
-                command: 'plan'
-                workingDirectory: $(Work_Dir)
-                environmentServiceNameAzureRM: $(qaServiceConnection)
+          echo "Copying new application..."
+          sudo cp -r /tmp/dev-frontend/* /var/www/html/
 
-            - task: TerraformTask@5
-              displayName: terraform apply
-              inputs:
-                provider: 'azurerm'
-                command: 'apply'
-                workingDirectory: $(Work_Dir)
-                environmentServiceNameAzureRM: $(qaServiceConnection)
+          echo "Setting permissions..."
+          sudo chown -R www-data:www-data /var/www/html
+          sudo chmod -R 755 /var/www/html
+
+          echo "Testing Nginx..."
+          sudo nginx -t
+
+          echo "Reloading Nginx..."
+          sudo systemctl reload nginx
+
+          echo "Checking Nginx status..."
+          sudo systemctl is-active nginx
+
+          echo "=========================================="
+          echo "DEV FRONTEND DEPLOYMENT SUCCESSFUL"
+          echo "VM: frontvm"
+          echo "=========================================="
 
 
+# =========================================================
+# DEV - BACKEND VM
+# =========================================================
+
+- stage: Dev_Backend
+  displayName: 'DEV - Backend Deployment'
+
+  dependsOn: Dev_Frontend
+  condition: succeeded()
+
+  jobs:
+  - job: Deploy_Backend
+    displayName: 'Deploy Code to backendvm'
+
+    steps:
+
+    - checkout: self
+
+    - powershell: |
+        Write-Host "=========================================="
+        Write-Host "DEV BACKEND DEPLOYMENT"
+        Write-Host "=========================================="
+        Write-Host "VM: backendvm"
+        Write-Host "Build ID: $(Build.BuildId)"
+        Write-Host "Branch: $(Build.SourceBranch)"
+        Write-Host "Repository: $(Build.Repository.Name)"
+        Write-Host "=========================================="
+      displayName: 'DEV Backend Information'
+
+    # Copy repository code to backend VM
+    - task: CopyFilesOverSSH@0
+      displayName: 'Copy Code to backendvm'
+      inputs:
+        sshEndpoint: 'ssh-backendvm'
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          **/*
+          !.git/**
+          !.git/**/*
+          !.terraform/**
+          !.terraform/**/*
+          !terraform.tfstate
+          !terraform.tfstate.*
+          !backend.tfvars
+          !azure-pipelines.yml
+        targetFolder: '/tmp/dev-backend'
+        readyTimeout: '20000'
+
+    # Deploy code and reload Nginx
+    - task: SSH@0
+      displayName: 'Deploy on backendvm'
+      inputs:
+        sshEndpoint: 'ssh-backendvm'
+        runOptions: 'inline'
+        readyTimeout: '20000'
+        inline: |
+          set -e
+
+          echo "=========================================="
+          echo "DEV BACKEND DEPLOYMENT STARTED"
+          echo "=========================================="
+
+          echo "Checking Nginx..."
+          sudo nginx -t
+
+          echo "Creating backend directory..."
+          sudo mkdir -p /var/www/backend
+
+          echo "Removing old application..."
+          sudo rm -rf /var/www/backend/*
+
+          echo "Copying new application..."
+          sudo cp -r /tmp/dev-backend/* /var/www/backend/
+
+          echo "Setting permissions..."
+          sudo chown -R www-data:www-data /var/www/backend
+          sudo chmod -R 755 /var/www/backend
+
+          echo "Testing Nginx..."
+          sudo nginx -t
+
+          echo "Reloading Nginx..."
+          sudo systemctl reload nginx
+
+          echo "Checking Nginx status..."
+          sudo systemctl is-active nginx
+
+          echo "=========================================="
+          echo "DEV BACKEND DEPLOYMENT SUCCESSFUL"
+          echo "VM: backendvm"
+          echo "=========================================="
