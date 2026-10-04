@@ -4,26 +4,26 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "4.52.0"
+      version = "4.79.0"
     }
   }
-backend "azurerm" {}
+   backend "azurerm" {
+  resource_group_name  = "sit"
+  storage_account_name = "sitterraformstate2026"
+  container_name       = "tfstate"
+  key                  = "sit.terraform.tfstate"
+}
 }
 
 provider "azurerm" {
   features {}
 
-  subscription_id = "5235c2c1-03cf-4091-87b8-e8adb1a1c5f6"
+  subscription_id = "6670366d-32db-4180-a842-1ce1053317b7"
 }
 
 provider "azurerm" {
   features {}
-  subscription_id = "5235c2c1-03cf-4091-87b8-e8adb1a1c5f6"
+  subscription_id = "6670366d-32db-4180-a842-1ce1053317b7"
   alias           = "dev"
 }
 
-provider "azurerm" {
-  features {}
-  subscription_id = "11111111-2222-3333-4444-555555555555"
-  alias           = "prod"
-}

@@ -1,0 +1,130 @@
+trigger:
+- main
+
+pool:
+  name: Azurecicd
+
+stages:
+
+# ==========================================
+# FRONTEND VM DEPLOYMENT
+# ==========================================
+- stage: Frontend
+  displayName: 'Deploy Frontend VM'
+
+  jobs:
+  - job: DeployFrontend
+    displayName: 'Deploy Frontend Code'
+
+    steps:
+
+    - checkout: self
+
+    - task: CopyFilesOverSSH@0
+      displayName: 'Copy Frontend Code to VM'
+      inputs:
+        sshEndpoint: 'ssh-frontend-vm'
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          **/*
+          !.git/**
+          !.git/**/*
+          !.terraform/**
+          !.terraform/**/*
+          !terraform.tfstate
+          !terraform.tfstate.*
+          !backend.tfvars
+          !azure-pipelines.yml
+        targetFolder: '/tmp/frontend'
+
+    - task: SSH@0
+      displayName: 'Deploy Frontend and Restart Nginx'
+      inputs:
+        sshEndpoint: 'ssh-frontend-vm'
+        runOptions: 'inline'
+        inline: |
+          echo "===================================="
+          echo "Deploying Frontend"
+          echo "===================================="
+
+          sudo mkdir -p /var/www/html
+
+          sudo rm -rf /var/www/html/*
+
+          sudo cp -r /tmp/frontend/* /var/www/html/
+
+          sudo chown -R www-data:www-data /var/www/html
+
+          sudo chmod -R 755 /var/www/html
+
+          echo "Testing Nginx configuration..."
+
+          sudo nginx -t
+
+          echo "Reloading Nginx..."
+
+          sudo systemctl reload nginx
+
+          echo "Frontend deployment completed."
+
+# ==========================================
+# BACKEND VM DEPLOYMENT
+# ==========================================
+- stage: Backend
+  displayName: 'Deploy Backend VM'
+
+  dependsOn: Frontend
+  condition: succeeded()
+
+  jobs:
+  - job: DeployBackend
+    displayName: 'Deploy Backend Code'
+
+    steps:
+
+    - checkout: self
+
+    - task: CopyFilesOverSSH@0
+      displayName: 'Copy Backend Code to VM'
+      inputs:
+        sshEndpoint: 'ssh-backend-vm'
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          **/*
+          !.git/**
+          !.git/**/*
+          !.terraform/**
+          !.terraform/**/*
+          !terraform.tfstate
+          !terraform.tfstate.*
+          !backend.tfvars
+          !azure-pipelines.yml
+        targetFolder: '/tmp/backend'
+
+    - task: SSH@0
+      displayName: 'Deploy Backend'
+      inputs:
+        sshEndpoint: 'ssh-backend-vm'
+        runOptions: 'inline'
+        inline: |
+          echo "===================================="
+          echo "Deploying Backend"
+          echo "===================================="
+
+          sudo mkdir -p /var/www/backend
+
+          sudo rm -rf /var/www/backend/*
+
+          sudo cp -r /tmp/backend/* /var/www/backend/
+
+          sudo chown -R www-data:www-data /var/www/backend
+
+          echo "Testing Nginx configuration..."
+
+          sudo nginx -t
+
+          echo "Reloading Nginx..."
+
+          sudo systemctl reload nginx
+
+          echo "Backend deployment completed."

@@ -21,7 +21,7 @@ vnet = {
     address_space       = ["10.0.0.0/16"]
     tags = {
       environment = "devuction"
-      owner       = "sidharth"
+      owner       = "shailesh"
     }
   }
 
@@ -56,7 +56,7 @@ nic = {
 
     tags = {
       environment = "devuction"
-      owner       = "sidharth"
+      owner       = "shailesh"
     }
   }
 
@@ -69,7 +69,7 @@ nic = {
     vnet_name           = "lz-dev-vnet-westus2"
     tags = {
       environment = "devuction"
-      owner       = "sidharth"
+      owner       = "shailesh"
     }
   }
 }
@@ -78,21 +78,21 @@ nic = {
 vm = {
   frontend = {
     vm_name = "lz-dev-vm-frontend"
-    size    = "Standard_B2s"
-    # admin_username = "azureuser"
-    # admin_password = "Password123!"
+    size    = "Standard_D2ads_v7"
+     #admin_username = "azureuser"
+    #admin_password = "Password123!"
     nic_name = "lz-dev-nic-frontend"
     rg_name  = "lz-dev-rg-app-westus2"
     location = "westus2"
     tags = {
       environment = "devuction"
-      owner       = "sidharth"
+      owner       = "shailesh"
     }
   }
 
   backend = {
     vm_name = "lz-dev-vm-backend"
-    size    = "Standard_B2s"
+    size    = "Standard_D2ads_v7"
     # admin_username = "azureuser"
     # admin_password = "Password123!"
     nic_name = "lz-dev-nic-backend"
@@ -101,7 +101,7 @@ vm = {
 
     tags = {
       environment = "devuction"
-      owner       = "sidharth"
+      owner       = "shailesh"
     }
   }
 }
@@ -142,7 +142,7 @@ nsg = {
     resource_group_name = "lz-dev-rg-app-westus2"
     tags = {
       environment = "devuction"
-      owner       = "sidharth"
+      owner       = "shailesh"
     }
   }
 
@@ -152,7 +152,7 @@ nsg = {
     resource_group_name = "lz-dev-rg-app-westus2"
     tags = {
       environment = "devuction"
-      owner       = "sidharth"
+      owner       = "shailesh"
     }
   }
 }
