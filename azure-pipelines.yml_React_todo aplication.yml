@@ -1,0 +1,192 @@
+trigger:
+- main
+
+pool:
+  name: Azurecicd
+
+variables:
+- group: dev
+
+stages:
+
+# =========================================================
+# DEV - FRONTEND VM
+# =========================================================
+
+- stage: Dev_Frontend
+  displayName: 'DEV - Frontend Deployment'
+
+  jobs:
+  - job: Deploy_Frontend
+    displayName: 'Deploy Code to frontvm'
+
+    steps:
+
+    - checkout: self
+
+    - powershell: |
+        Write-Host "=========================================="
+        Write-Host "DEV FRONTEND DEPLOYMENT"
+        Write-Host "=========================================="
+        Write-Host "VM: frontvm"
+        Write-Host "Build ID: $(Build.BuildId)"
+        Write-Host "Branch: $(Build.SourceBranch)"
+        Write-Host "Repository: $(Build.Repository.Name)"
+        Write-Host "=========================================="
+      displayName: 'DEV Frontend Information'
+
+    # Copy repository code to frontend VM
+    - task: CopyFilesOverSSH@0
+      displayName: 'Copy Code to frontvm'
+      inputs:
+        sshEndpoint: 'ssh-frontvm'
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          **/*
+          !.git/**
+          !.git/**/*
+          !.terraform/**
+          !.terraform/**/*
+          !terraform.tfstate
+          !terraform.tfstate.*
+          !backend.tfvars
+          !azure-pipelines.yml
+        targetFolder: '/tmp/dev-frontend'
+        readyTimeout: '20000'
+
+    # Deploy code and restart Nginx
+    - task: SSH@0
+      displayName: 'Deploy on frontvm'
+      inputs:
+        sshEndpoint: 'ssh-frontvm'
+        runOptions: 'inline'
+        readyTimeout: '20000'
+        inline: |
+          set -e
+
+          echo "=========================================="
+          echo "DEV FRONTEND DEPLOYMENT STARTED"
+          echo "=========================================="
+
+          echo "Checking Nginx..."
+          sudo nginx -t
+
+          echo "Creating web directory..."
+          sudo mkdir -p /var/www/html
+
+          echo "Removing old application..."
+          sudo rm -rf /var/www/html/*
+
+          echo "Copying new application..."
+          sudo cp -r /tmp/dev-frontend/* /var/www/html/
+
+          echo "Setting permissions..."
+          sudo chown -R www-data:www-data /var/www/html
+          sudo chmod -R 755 /var/www/html
+
+          echo "Testing Nginx..."
+          sudo nginx -t
+
+          echo "Reloading Nginx..."
+          sudo systemctl reload nginx
+
+          echo "Checking Nginx status..."
+          sudo systemctl is-active nginx
+
+          echo "=========================================="
+          echo "DEV FRONTEND DEPLOYMENT SUCCESSFUL"
+          echo "VM: frontvm"
+          echo "=========================================="
+
+
+# =========================================================
+# DEV - BACKEND VM
+# =========================================================
+
+- stage: Dev_Backend
+  displayName: 'DEV - Backend Deployment'
+
+  dependsOn: Dev_Frontend
+  condition: succeeded()
+
+  jobs:
+  - job: Deploy_Backend
+    displayName: 'Deploy Code to backendvm'
+
+    steps:
+
+    - checkout: self
+
+    - powershell: |
+        Write-Host "=========================================="
+        Write-Host "DEV BACKEND DEPLOYMENT"
+        Write-Host "=========================================="
+        Write-Host "VM: backendvm"
+        Write-Host "Build ID: $(Build.BuildId)"
+        Write-Host "Branch: $(Build.SourceBranch)"
+        Write-Host "Repository: $(Build.Repository.Name)"
+        Write-Host "=========================================="
+      displayName: 'DEV Backend Information'
+
+    # Copy repository code to backend VM
+    - task: CopyFilesOverSSH@0
+      displayName: 'Copy Code to backendvm'
+      inputs:
+        sshEndpoint: 'ssh-backendvm'
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: |
+          **/*
+          !.git/**
+          !.git/**/*
+          !.terraform/**
+          !.terraform/**/*
+          !terraform.tfstate
+          !terraform.tfstate.*
+          !backend.tfvars
+          !azure-pipelines.yml
+        targetFolder: '/tmp/dev-backend'
+        readyTimeout: '20000'
+
+    # Deploy code and reload Nginx
+    - task: SSH@0
+      displayName: 'Deploy on backendvm'
+      inputs:
+        sshEndpoint: 'ssh-backendvm'
+        runOptions: 'inline'
+        readyTimeout: '20000'
+        inline: |
+          set -e
+
+          echo "=========================================="
+          echo "DEV BACKEND DEPLOYMENT STARTED"
+          echo "=========================================="
+
+          echo "Checking Nginx..."
+          sudo nginx -t
+
+          echo "Creating backend directory..."
+          sudo mkdir -p /var/www/backend
+
+          echo "Removing old application..."
+          sudo rm -rf /var/www/backend/*
+
+          echo "Copying new application..."
+          sudo cp -r /tmp/dev-backend/* /var/www/backend/
+
+          echo "Setting permissions..."
+          sudo chown -R www-data:www-data /var/www/backend
+          sudo chmod -R 755 /var/www/backend
+
+          echo "Testing Nginx..."
+          sudo nginx -t
+
+          echo "Reloading Nginx..."
+          sudo systemctl reload nginx
+
+          echo "Checking Nginx status..."
+          sudo systemctl is-active nginx
+
+          echo "=========================================="
+          echo "DEV BACKEND DEPLOYMENT SUCCESSFUL"
+          echo "VM: backendvm"
+          echo "=========================================="
