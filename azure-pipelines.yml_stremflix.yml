@@ -6,29 +6,91 @@ pool:
 
 steps:
 
+# 1. Checkout StreamFlix repository
 - checkout: self
+  clean: true
   displayName: 'Checkout StreamFlix'
 
+# 2. Verify repository files
+- powershell: |
+    Write-Host "====================================="
+    Write-Host "Build Sources Directory:"
+    Write-Host "$(Build.SourcesDirectory)"
+    Write-Host "====================================="
+
+    Set-Location "$(Build.SourcesDirectory)"
+
+    Write-Host "Current directory:"
+    Get-Location
+
+    Write-Host "Repository files:"
+    Get-ChildItem
+
+    Write-Host "Checking package.json..."
+
+    if (-not (Test-Path "$(Build.SourcesDirectory)\package.json")) {
+        Write-Error "package.json NOT FOUND in Build.SourcesDirectory"
+        exit 1
+    }
+
+    Write-Host "package.json FOUND"
+  displayName: 'Verify StreamFlix Files'
+
+# 3. Install Node.js
 - task: NodeTool@0
   displayName: 'Install Node.js'
   inputs:
-    versionSpec: '24.x'
+    versionSpec: '20.x'
 
+# 4. Check Node and npm
 - powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    Write-Host "Node version:"
     node --version
+
+    Write-Host "npm version:"
     npm.cmd --version
+
+    Write-Host "Working directory:"
+    Get-Location
   displayName: 'Check Node.js and npm'
 
+# 5. Install dependencies
 - powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    Write-Host "Installing dependencies..."
     npm.cmd install
   displayName: 'Install Dependencies'
 
+# 6. Build React/Vite application
 - powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    Write-Host "Building StreamFlix..."
     npm.cmd run build
   displayName: 'Build StreamFlix'
 
+# 7. Verify dist folder
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    Write-Host "Checking dist folder..."
+
+    if (-not (Test-Path "$(Build.SourcesDirectory)\dist")) {
+        Write-Error "dist folder was NOT created"
+        exit 1
+    }
+
+    Write-Host "dist folder FOUND"
+    Write-Host "Build files:"
+    Get-ChildItem "$(Build.SourcesDirectory)\dist" -Recurse
+  displayName: 'Verify Build Output'
+
+# 8. Publish build artifact
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish StreamFlix Build'
+  displayName: 'Publish StreamFlix Artifact'
   inputs:
     PathtoPublish: '$(Build.SourcesDirectory)\dist'
     ArtifactName: 'streamflix-dist'
