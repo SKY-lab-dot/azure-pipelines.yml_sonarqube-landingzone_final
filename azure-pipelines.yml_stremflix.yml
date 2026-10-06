@@ -14,6 +14,36 @@ steps:
 # 2. Verify repository files
 - powershell: |
     Write-Host "====================================="
+    Write-Host "Repository Name:"
+    Write-Host "$(Build.Repository.Name)"
+
+    Write-Host "Repository Type:"
+    Write-Host "$(Build.Repository.Provider)"
+
+    Write-Host "Source Branch:"
+    Write-Host "$(Build.SourceBranch)"
+
+    Write-Host "Source Version:"
+    Write-Host "$(Build.SourceVersion)"
+
+    Write-Host "Source Directory:"
+    Write-Host "$(Build.SourcesDirectory)"
+    Write-Host "====================================="
+
+    Write-Host "Repository files:"
+    Get-ChildItem "$(Build.SourcesDirectory)" -Force -Recurse |
+      Select-Object -First 50 FullName
+
+    Write-Host "====================================="
+
+    if (-not (Test-Path "$(Build.SourcesDirectory)\package.json")) {
+        Write-Error "package.json NOT FOUND"
+        exit 1
+    }
+
+    Write-Host "package.json FOUND"
+    displayName: 'Verify Repository'- powershell: |
+    Write-Host "====================================="
     Write-Host "Build Sources Directory:"
     Write-Host "$(Build.SourcesDirectory)"
     Write-Host "====================================="
