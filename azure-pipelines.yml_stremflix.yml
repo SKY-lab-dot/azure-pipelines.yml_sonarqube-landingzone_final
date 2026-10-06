@@ -1,0 +1,35 @@
+trigger:
+- main
+
+pool:
+  name: Azurecicd
+
+steps:
+
+- checkout: self
+  displayName: 'Checkout StreamFlix'
+
+- task: NodeTool@0
+  displayName: 'Install Node.js'
+  inputs:
+    versionSpec: '24.x'
+
+- powershell: |
+    node --version
+    npm.cmd --version
+  displayName: 'Check Node.js and npm'
+
+- powershell: |
+    npm.cmd install
+  displayName: 'Install Dependencies'
+
+- powershell: |
+    npm.cmd run build
+  displayName: 'Build StreamFlix'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish StreamFlix Build'
+  inputs:
+    PathtoPublish: '$(Build.SourcesDirectory)\dist'
+    ArtifactName: 'streamflix-dist'
+    publishLocation: 'Container'
