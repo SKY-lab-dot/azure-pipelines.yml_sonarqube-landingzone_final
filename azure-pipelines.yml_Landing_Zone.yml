@@ -46,7 +46,7 @@ steps:
     scriptLocation: 'inlineScript'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     inlineScript: |
-      terraform plan
+      terraform plan -input=false
 
 - task: AzureCLI@3
   displayName: 'Terraform Apply'
@@ -56,4 +56,4 @@ steps:
     scriptLocation: 'inlineScript'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     inlineScript: |
-      terraform apply -auto-approve
+      terraform apply -auto-approve -input=false
