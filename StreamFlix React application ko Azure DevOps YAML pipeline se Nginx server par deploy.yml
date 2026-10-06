@@ -26,6 +26,33 @@ stages:
 
     steps:
 
+    # Clone StreamFlix GitHub repository
+    - powershell: |
+        Set-Location "$(Build.SourcesDirectory)"
+
+        Write-Host "Cleaning source directory..."
+
+        Get-ChildItem -Force |
+          Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+        Write-Host "Cloning StreamFlix..."
+
+        git clone --branch main --single-branch `
+          https://github.com/SKY-lab-dot/StreamFlix.git .
+
+        Write-Host "Repository cloned."
+        git log -1 --oneline
+
+        Write-Host "Checking package.json..."
+
+        if (!(Test-Path "$(Build.SourcesDirectory)\package.json")) {
+          Write-Error "package.json not found!"
+          exit 1
+        }
+
+        Write-Host "package.json found."
+      displayName: 'Clone StreamFlix'
+
     # Install Node.js
     - task: NodeTool@0
       displayName: 'Install Node.js'
@@ -48,25 +75,24 @@ stages:
         npm run build
       displayName: 'Build React Application'
 
-    # Verify dist folder
-    - script: |
-        if not exist dist (
-          echo dist folder not found
-          exit /b 1
-        )
+    # Verify dist
+    - powershell: |
+        if (!(Test-Path "$(Build.SourcesDirectory)\dist")) {
+          Write-Error "dist folder was not created."
+          exit 1
+        }
 
-        echo StreamFlix build successful
-        dir dist
+        Write-Host "StreamFlix build successful."
+        Get-ChildItem "$(Build.SourcesDirectory)\dist"
       displayName: 'Verify Build'
 
-    # Publish Vite dist folder
+    # Publish dist
     - task: PublishBuildArtifacts@1
       displayName: 'Publish StreamFlix Artifact'
       inputs:
-        PathtoPublish: 'dist'
+        PathtoPublish: '$(Build.SourcesDirectory)\dist'
         ArtifactName: '$(artifactName)'
         publishLocation: 'Container'
-
 
 # =========================================================
 # DEPLOY STAGE
