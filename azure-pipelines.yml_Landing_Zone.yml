@@ -1,0 +1,59 @@
+trigger:
+- main
+
+pool:
+  name: Azurecicd
+
+variables:
+- group: dev
+
+steps:
+
+- checkout: self
+  displayName: 'Checkout Terraform Code'
+
+- task: TerraformInstaller@1
+  displayName: 'Install Terraform'
+  inputs:
+    terraformVersion: '1.16.5'
+
+- task: AzureCLI@3
+  displayName: 'Terraform Init'
+  inputs:
+    azureSubscription: 'shailesh'
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    inlineScript: |
+      terraform version
+      terraform init -reconfigure
+
+- task: AzureCLI@3
+  displayName: 'Terraform Validate'
+  inputs:
+    azureSubscription: 'shailesh'
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    inlineScript: |
+      terraform validate
+
+- task: AzureCLI@3
+  displayName: 'Terraform Plan'
+  inputs:
+    azureSubscription: 'shailesh'
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    inlineScript: |
+      terraform plan
+
+- task: AzureCLI@3
+  displayName: 'Terraform Apply'
+  inputs:
+    azureSubscription: 'shailesh'
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    inlineScript: |
+      terraform apply -auto-approve
