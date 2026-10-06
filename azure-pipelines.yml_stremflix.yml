@@ -98,6 +98,39 @@ steps:
     Write-Host "Build completed successfully."
   displayName: 'Build StreamFlix'
 
+# 6. Install dependencies
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    Write-Host "====================================="
+    Write-Host "Node / npm information"
+    Write-Host "====================================="
+
+    node --version
+    npm.cmd --version
+
+    Write-Host ""
+    Write-Host "====================================="
+    Write-Host "npm cache"
+    Write-Host "====================================="
+
+    npm.cmd config get cache
+    npm.cmd config get prefix
+
+    Write-Host ""
+    Write-Host "====================================="
+    Write-Host "Installing dependencies..."
+    Write-Host "====================================="
+
+    npm.cmd install --verbose
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "npm install failed"
+        exit 1
+    }
+
+    Write-Host "Dependencies installed successfully."
+  displayName: 'Install Dependencies'
 # 7. Verify dist
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
