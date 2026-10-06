@@ -6,7 +6,7 @@ pool:
 
 steps:
 
-# 1. Clean Azure DevOps workspace
+# 1. Clean workspace
 - powershell: |
     Write-Host "Cleaning workspace..."
 
@@ -18,12 +18,12 @@ steps:
     Write-Host "Workspace cleaned."
   displayName: 'Clean Workspace'
 
-# 2. Clone StreamFlix from GitHub
+# 2. Clone StreamFlix
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
     Write-Host "Cloning StreamFlix..."
-    
+
     git clone --branch main --single-branch https://github.com/sidharth132/StreamFlix.git .
 
     if ($LASTEXITCODE -ne 0) {
@@ -34,18 +34,12 @@ steps:
     Write-Host "StreamFlix cloned successfully."
   displayName: 'Clone StreamFlix'
 
-# 3. Verify repository
+# 3. Verify files
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
-    Write-Host "====================================="
     Write-Host "Repository files:"
-    Write-Host "====================================="
-
     Get-ChildItem -Force
-
-    Write-Host ""
-    Write-Host "Checking package.json..."
 
     if (-not (Test-Path "$(Build.SourcesDirectory)\package.json")) {
         Write-Error "package.json NOT FOUND"
@@ -55,13 +49,7 @@ steps:
     Write-Host "package.json FOUND"
   displayName: 'Verify StreamFlix Files'
 
-# 4. Install Node.js
-- task: NodeTool@0
-  displayName: 'Install Node.js'
-  inputs:
-    versionSpec: '20.x'
-
-# 5. Check Node and npm
+# 4. Use existing Node.js
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
@@ -70,9 +58,15 @@ steps:
 
     Write-Host "npm version:"
     npm.cmd --version
-  displayName: 'Check Node.js and npm'
 
-# 6. Install dependencies
+    Write-Host "Node location:"
+    where.exe node
+
+    Write-Host "npm location:"
+    where.exe npm
+  displayName: 'Check Existing Node.js'
+
+# 5. Install dependencies
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
@@ -88,7 +82,7 @@ steps:
     Write-Host "Dependencies installed successfully."
   displayName: 'Install Dependencies'
 
-# 7. Build StreamFlix
+# 6. Build StreamFlix
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
@@ -104,7 +98,7 @@ steps:
     Write-Host "Build completed successfully."
   displayName: 'Build StreamFlix'
 
-# 8. Verify dist
+# 7. Verify dist
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
@@ -113,14 +107,12 @@ steps:
         exit 1
     }
 
-    Write-Host "====================================="
     Write-Host "dist folder FOUND"
-    Write-Host "====================================="
 
     Get-ChildItem "$(Build.SourcesDirectory)\dist" -Recurse
   displayName: 'Verify Build Output'
 
-# 9. Publish artifact
+# 8. Publish artifact
 - task: PublishBuildArtifacts@1
   displayName: 'Publish StreamFlix Artifact'
   inputs:
