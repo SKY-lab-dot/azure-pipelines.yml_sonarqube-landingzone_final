@@ -1,0 +1,176 @@
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: Azurecicd
+
+variables:
+  nodeVersion: '20.x'
+  artifactName: 'streamflix-build'
+  deployPath: '/var/www/streamflix'
+
+stages:
+
+# =========================================================
+# BUILD STAGE
+# =========================================================
+
+- stage: Build
+  displayName: 'Build StreamFlix'
+
+  jobs:
+  - job: Build
+    displayName: 'Build React Application'
+
+    steps:
+
+    # Install Node.js
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+    # Install dependencies
+    - script: |
+        npm install
+      displayName: 'Install Dependencies'
+
+    # Build React application
+    - script: |
+        npm run build
+      displayName: 'Build React Application'
+
+    # Publish build files
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish StreamFlix Artifact'
+      inputs:
+        PathtoPublish: 'build'
+        ArtifactName: '$(artifactName)'
+        publishLocation: 'Container'
+
+
+# =========================================================
+# DEPLOY STAGE
+# =========================================================
+
+- stage: Deploy
+  displayName: 'Deploy StreamFlix'
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy to Nginx'
+
+    steps:
+
+    # Download artifact
+    - task: DownloadBuildArtifacts@1
+      displayName: 'Download StreamFlix Artifact'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(artifactName)'
+        downloadPath: '$(Pipeline.Workspace)'
+
+    # Copy files to Nginx server
+    - task: CopyFilesOverSSH@0
+      displayName: 'Copy Build Files to Nginx'
+      inputs:
+        sshEndpoint: 'StreamFlix-SSH'
+        sourceFolder: '$(Pipeline.Workspace)/$(artifactName)'
+        contents: '**'
+        targetFolder: '$(deployPath)'
+        cleanTargetFolder: true
+        overwrite: true
+
+    # Restart Nginx
+    - task: SSH@0
+      displayName: 'Restart Nginx'
+      inputs:
+        sshEndpoint: 'StreamFlix-SSH'
+        runOptions: 'inline'
+        inline: |
+          sudo systemctl restart nginx
+          sudo systemctl status nginx --no-pagertrigger:
+- main
+
+pool:
+  name: Azurecicd
+
+variables:
+  NPM_CONFIG_CACHE: 'D:\npm-cache'
+  NPM_CONFIG_PREFIX: 'D:\npm-global'
+
+steps:
+
+# 1. Clean workspace
+- powershell: |
+    Write-Host "Cleaning workspace..."
+    Get-ChildItem "$(Build.SourcesDirectory)" -Force |
+      Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+  displayName: 'Clean workspace'
+
+# 2. Clone StreamFlix
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    git clone --branch main --single-branch `
+      https://github.com/SKY-lab-dot/StreamFlix.git .
+
+    Write-Host "Repository cloned successfully."
+    git branch
+    git log -1 --oneline
+  displayName: 'Clone StreamFlix'
+
+# 3. Check Node and npm
+- powershell: |
+    node --version
+    npm --version
+  displayName: 'Check Node and npm'
+
+# 4. Verify package.json
+- powershell: |
+    if (!(Test-Path "$(Build.SourcesDirectory)\package.json")) {
+      Write-Error "package.json not found"
+      exit 1
+    }
+
+    Write-Host "package.json found."
+  displayName: 'Verify package.json'
+
+# 5. Install dependencies
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    npm install
+  displayName: 'Install npm dependencies'
+
+# 6. Build React application
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    npm run build
+  displayName: 'Build StreamFlix'
+
+# 7. Verify dist
+- powershell: |
+    if (!(Test-Path "$(Build.SourcesDirectory)\dist")) {
+      Write-Error "dist folder was not created."
+      exit 1
+    }
+
+    Write-Host "Build successful."
+    Get-ChildItem "$(Build.SourcesDirectory)\dist"
+  displayName: 'Verify production build'
+
+# 8. Publish dist as artifact
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish StreamFlix artifact'
+  inputs:
+    targetPath: '$(Build.SourcesDirectory)\dist'
+    artifact: 'streamflix-dist'
+    publishLocation: 'pipeline'
