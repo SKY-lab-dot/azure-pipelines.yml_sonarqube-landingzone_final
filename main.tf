@@ -1,21 +1,21 @@
 module "rg" {
-  source = "../child_module/rg"
+  source = "./child_module/rg"
   rg     = var.rg
 
 }
 module "vnet" {
-  source     = "../child_module/vnet"
+  source     = "./child_module/vnet"
   depends_on = [module.rg]
   vnet       = var.vnet
 
 }
 module "snet" {
-  source     = "../child_module/subnet"
+  source     = "./child_module/subnet"
   depends_on = [module.rg, module.vnet]
   subnet     = var.subnet
 }
 module "nic" {
-  source = "../child_module/nic"
+  source = "./child_module/nic"
 
   depends_on = [
     module.rg,
@@ -37,7 +37,7 @@ module "nic" {
 }
 module "nsg" {
 
-  source = "../Child_module/nsg"
+  source = "./Child_module/nsg"
 
   depends_on = [
     module.rg
@@ -47,7 +47,7 @@ module "nsg" {
 }
 module "association" {
 
-  source = "../Child_module/nic&nsg association"
+  source = "./Child_module/nic&nsg association"
 
   depends_on = [module.nic, module.nsg]
 
@@ -64,7 +64,7 @@ module "association" {
   }
 }
 module "vm" {
-  source = "../child_module/vm"
+  source = "./child_module/vm"
 
   depends_on = [
     module.rg,
@@ -87,7 +87,7 @@ module "vm" {
 }
 module "public_ip" {
 
-  source = "../child_module/public_ip"
+  source = "./child_module/public_ip"
 
   public_ip = var.public_ip
 
