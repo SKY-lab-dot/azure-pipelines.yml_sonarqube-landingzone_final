@@ -1,4 +1,3 @@
-
 trigger:
   branches:
     include:
@@ -33,21 +32,38 @@ stages:
       inputs:
         versionSpec: '$(nodeVersion)'
 
+    # Check Node/npm
+    - script: |
+        node --version
+        npm --version
+      displayName: 'Check Node and npm'
+
     # Install dependencies
     - script: |
         npm install
       displayName: 'Install Dependencies'
 
-    # Build React application
+    # Build Vite React application
     - script: |
         npm run build
       displayName: 'Build React Application'
 
-    # Publish build files
+    # Verify dist folder
+    - script: |
+        if not exist dist (
+          echo dist folder not found
+          exit /b 1
+        )
+
+        echo StreamFlix build successful
+        dir dist
+      displayName: 'Verify Build'
+
+    # Publish Vite dist folder
     - task: PublishBuildArtifacts@1
       displayName: 'Publish StreamFlix Artifact'
       inputs:
-        PathtoPublish: 'build'
+        PathtoPublish: 'dist'
         ArtifactName: '$(artifactName)'
         publishLocation: 'Container'
 
@@ -57,13 +73,13 @@ stages:
 # =========================================================
 
 - stage: Deploy
-  displayName: 'Deploy StreamFlix'
+  displayName: 'Deploy StreamFlix Frontend'
   dependsOn: Build
   condition: succeeded()
 
   jobs:
   - job: Deploy
-    displayName: 'Deploy to Nginx'
+    displayName: 'Deploy Frontend to Nginx'
 
     steps:
 
@@ -76,11 +92,11 @@ stages:
         artifactName: '$(artifactName)'
         downloadPath: '$(Pipeline.Workspace)'
 
-    # Copy files to Nginx server
+    # Copy frontend to Nginx VM
     - task: CopyFilesOverSSH@0
-      displayName: 'Copy Build Files to Nginx'
+      displayName: 'Copy StreamFlix to Nginx'
       inputs:
-        sshEndpoint: 'StreamFlix-SSH'
+        sshEndpoint: 'VM1'
         sourceFolder: '$(Pipeline.Workspace)/$(artifactName)'
         contents: '**'
         targetFolder: '$(deployPath)'
@@ -91,86 +107,8 @@ stages:
     - task: SSH@0
       displayName: 'Restart Nginx'
       inputs:
-        sshEndpoint: 'StreamFlix-SSH'
+        sshEndpoint: 'VM1'
         runOptions: 'inline'
         inline: |
           sudo systemctl restart nginx
-          sudo systemctl status nginx --no-pagertrigger:
-- main
-
-pool:
-  name: Azurecicd
-
-variables:
-  NPM_CONFIG_CACHE: 'D:\npm-cache'
-  NPM_CONFIG_PREFIX: 'D:\npm-global'
-
-steps:
-
-# 1. Clean workspace
-- powershell: |
-    Write-Host "Cleaning workspace..."
-    Get-ChildItem "$(Build.SourcesDirectory)" -Force |
-      Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-  displayName: 'Clean workspace'
-
-# 2. Clone StreamFlix
-- powershell: |
-    Set-Location "$(Build.SourcesDirectory)"
-
-    git clone --branch main --single-branch `
-      https://github.com/SKY-lab-dot/StreamFlix.git .
-
-    Write-Host "Repository cloned successfully."
-    git branch
-    git log -1 --oneline
-  displayName: 'Clone StreamFlix'
-
-# 3. Check Node and npm
-- powershell: |
-    node --version
-    npm --version
-  displayName: 'Check Node and npm'
-
-# 4. Verify package.json
-- powershell: |
-    if (!(Test-Path "$(Build.SourcesDirectory)\package.json")) {
-      Write-Error "package.json not found"
-      exit 1
-    }
-
-    Write-Host "package.json found."
-  displayName: 'Verify package.json'
-
-# 5. Install dependencies
-- powershell: |
-    Set-Location "$(Build.SourcesDirectory)"
-
-    npm install
-  displayName: 'Install npm dependencies'
-
-# 6. Build React application
-- powershell: |
-    Set-Location "$(Build.SourcesDirectory)"
-
-    npm run build
-  displayName: 'Build StreamFlix'
-
-# 7. Verify dist
-- powershell: |
-    if (!(Test-Path "$(Build.SourcesDirectory)\dist")) {
-      Write-Error "dist folder was not created."
-      exit 1
-    }
-
-    Write-Host "Build successful."
-    Get-ChildItem "$(Build.SourcesDirectory)\dist"
-  displayName: 'Verify production build'
-
-# 8. Publish dist as artifact
-- task: PublishPipelineArtifact@1
-  displayName: 'Publish StreamFlix artifact'
-  inputs:
-    targetPath: '$(Build.SourcesDirectory)\dist'
-    artifact: 'streamflix-dist'
-    publishLocation: 'pipeline'
+          sudo systemctl status nginx --no-pager
