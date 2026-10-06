@@ -6,35 +6,46 @@ pool:
 
 steps:
 
-# 1. Checkout StreamFlix repository
-- checkout: self
-  clean: true
-  displayName: 'Checkout StreamFlix'
-
-# 2. Verify repository files
+# 1. Clean Azure DevOps workspace
 - powershell: |
+    Write-Host "Cleaning workspace..."
+
+    if (Test-Path "$(Build.SourcesDirectory)") {
+        Get-ChildItem "$(Build.SourcesDirectory)" -Force |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "Workspace cleaned."
+  displayName: 'Clean Workspace'
+
+# 2. Clone StreamFlix from GitHub
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    Write-Host "Cloning StreamFlix..."
+    
+    git clone --branch main --single-branch https://github.com/sidharth132/StreamFlix.git .
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Git clone failed"
+        exit 1
+    }
+
+    Write-Host "StreamFlix cloned successfully."
+  displayName: 'Clone StreamFlix'
+
+# 3. Verify repository
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
     Write-Host "====================================="
-    Write-Host "Repository Name:"
-    Write-Host "$(Build.Repository.Name)"
-
-    Write-Host "Repository Type:"
-    Write-Host "$(Build.Repository.Provider)"
-
-    Write-Host "Source Branch:"
-    Write-Host "$(Build.SourceBranch)"
-
-    Write-Host "Source Version:"
-    Write-Host "$(Build.SourceVersion)"
-
-    Write-Host "Source Directory:"
-    Write-Host "$(Build.SourcesDirectory)"
-    Write-Host "====================================="
-
     Write-Host "Repository files:"
-    Get-ChildItem "$(Build.SourcesDirectory)" -Force -Recurse |
-      Select-Object -First 50 FullName
-
     Write-Host "====================================="
+
+    Get-ChildItem -Force
+
+    Write-Host ""
+    Write-Host "Checking package.json..."
 
     if (-not (Test-Path "$(Build.SourcesDirectory)\package.json")) {
         Write-Error "package.json NOT FOUND"
@@ -42,37 +53,15 @@ steps:
     }
 
     Write-Host "package.json FOUND"
-    displayName: 'Verify Repository'- powershell: |
-    Write-Host "====================================="
-    Write-Host "Build Sources Directory:"
-    Write-Host "$(Build.SourcesDirectory)"
-    Write-Host "====================================="
-
-    Set-Location "$(Build.SourcesDirectory)"
-
-    Write-Host "Current directory:"
-    Get-Location
-
-    Write-Host "Repository files:"
-    Get-ChildItem
-
-    Write-Host "Checking package.json..."
-
-    if (-not (Test-Path "$(Build.SourcesDirectory)\package.json")) {
-        Write-Error "package.json NOT FOUND in Build.SourcesDirectory"
-        exit 1
-    }
-
-    Write-Host "package.json FOUND"
   displayName: 'Verify StreamFlix Files'
 
-# 3. Install Node.js
+# 4. Install Node.js
 - task: NodeTool@0
   displayName: 'Install Node.js'
   inputs:
     versionSpec: '20.x'
 
-# 4. Check Node and npm
+# 5. Check Node and npm
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
@@ -81,44 +70,57 @@ steps:
 
     Write-Host "npm version:"
     npm.cmd --version
-
-    Write-Host "Working directory:"
-    Get-Location
   displayName: 'Check Node.js and npm'
 
-# 5. Install dependencies
+# 6. Install dependencies
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
     Write-Host "Installing dependencies..."
+
     npm.cmd install
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "npm install failed"
+        exit 1
+    }
+
+    Write-Host "Dependencies installed successfully."
   displayName: 'Install Dependencies'
 
-# 6. Build React/Vite application
+# 7. Build StreamFlix
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
 
     Write-Host "Building StreamFlix..."
+
     npm.cmd run build
-  displayName: 'Build StreamFlix'
 
-# 7. Verify dist folder
-- powershell: |
-    Set-Location "$(Build.SourcesDirectory)"
-
-    Write-Host "Checking dist folder..."
-
-    if (-not (Test-Path "$(Build.SourcesDirectory)\dist")) {
-        Write-Error "dist folder was NOT created"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "StreamFlix build failed"
         exit 1
     }
 
+    Write-Host "Build completed successfully."
+  displayName: 'Build StreamFlix'
+
+# 8. Verify dist
+- powershell: |
+    Set-Location "$(Build.SourcesDirectory)"
+
+    if (-not (Test-Path "$(Build.SourcesDirectory)\dist")) {
+        Write-Error "dist folder NOT FOUND"
+        exit 1
+    }
+
+    Write-Host "====================================="
     Write-Host "dist folder FOUND"
-    Write-Host "Build files:"
+    Write-Host "====================================="
+
     Get-ChildItem "$(Build.SourcesDirectory)\dist" -Recurse
   displayName: 'Verify Build Output'
 
-# 8. Publish build artifact
+# 9. Publish artifact
 - task: PublishBuildArtifacts@1
   displayName: 'Publish StreamFlix Artifact'
   inputs:
