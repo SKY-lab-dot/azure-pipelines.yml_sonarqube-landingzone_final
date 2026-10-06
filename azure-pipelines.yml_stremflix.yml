@@ -66,20 +66,52 @@ steps:
     where.exe npm
   displayName: 'Check Existing Node.js'
 
-# 5. Install dependencies
 - powershell: |
+    $ErrorActionPreference = "Continue"
+
     Set-Location "$(Build.SourcesDirectory)"
 
-    Write-Host "Installing dependencies..."
+    Write-Host "====================================="
+    Write-Host "Node"
+    Write-Host "====================================="
+    & "D:\NodeJS\node.exe" --version
 
-    npm.cmd install
+    Write-Host "====================================="
+    Write-Host "NPM"
+    Write-Host "====================================="
+    & "D:\NodeJS\npm.cmd" --version
 
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "npm install failed"
-        exit 1
-    }
+    Write-Host "====================================="
+    Write-Host "NPM CACHE"
+    Write-Host "====================================="
 
-    Write-Host "Dependencies installed successfully."
+    New-Item -ItemType Directory -Force -Path "D:\npm-cache" | Out-Null
+    New-Item -ItemType Directory -Force -Path "D:\npm-cache\temp" | Out-Null
+
+    $env:TEMP = "D:\npm-cache\temp"
+    $env:TMP  = "D:\npm-cache\temp"
+
+    & "D:\NodeJS\npm.cmd" config set cache "D:\npm-cache"
+
+    & "D:\NodeJS\npm.cmd" config get cache
+
+    Write-Host "====================================="
+    Write-Host "PACKAGE.JSON"
+    Write-Host "====================================="
+
+    Get-Content "$(Build.SourcesDirectory)\package.json"
+
+    Write-Host "====================================="
+    Write-Host "NPM INSTALL"
+    Write-Host "====================================="
+
+    & "D:\NodeJS\npm.cmd" install --verbose
+
+    Write-Host "====================================="
+    Write-Host "NPM EXIT CODE: $LASTEXITCODE"
+    Write-Host "====================================="
+
+    exit $LASTEXITCODE
   displayName: 'Install Dependencies'
 
 # 6. Build StreamFlix
@@ -97,40 +129,6 @@ steps:
 
     Write-Host "Build completed successfully."
   displayName: 'Build StreamFlix'
-
-# 6. Install dependencies
-- powershell: |
-    Set-Location "$(Build.SourcesDirectory)"
-
-    Write-Host "====================================="
-    Write-Host "Node / npm information"
-    Write-Host "====================================="
-
-    node --version
-    npm.cmd --version
-
-    Write-Host ""
-    Write-Host "====================================="
-    Write-Host "npm cache"
-    Write-Host "====================================="
-
-    npm.cmd config get cache
-    npm.cmd config get prefix
-
-    Write-Host ""
-    Write-Host "====================================="
-    Write-Host "Installing dependencies..."
-    Write-Host "====================================="
-
-    npm.cmd install --verbose
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "npm install failed"
-        exit 1
-    }
-
-    Write-Host "Dependencies installed successfully."
-  displayName: 'Install Dependencies'
 # 7. Verify dist
 - powershell: |
     Set-Location "$(Build.SourcesDirectory)"
