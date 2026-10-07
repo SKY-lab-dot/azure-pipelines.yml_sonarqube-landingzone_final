@@ -39,6 +39,29 @@ stages:
         terraformVersion: '1.16.4'
 
     # -----------------------------------------------------
+    # TEST TERRAFORM EXECUTABLE
+    # -----------------------------------------------------
+
+    - task: PowerShell@2
+      displayName: 'Test Terraform Executable'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $tf = "$(Agent.ToolsDirectory)\terraform\1.16.4\x64\terraform.exe"
+
+          Write-Host "Agent.ToolsDirectory = $(Agent.ToolsDirectory)"
+          Write-Host "Terraform path = $tf"
+
+          Write-Host "Checking Terraform file..."
+          Test-Path -LiteralPath $tf
+
+          Write-Host "Terraform file details..."
+          Get-Item -LiteralPath $tf | Format-List FullName,Length
+
+          Write-Host "Running Terraform version..."
+          & $tf version
+
+    # -----------------------------------------------------
     # TERRAFORM INIT
     # -----------------------------------------------------
 
@@ -115,13 +138,16 @@ stages:
 
 - stage: Terraform_Apply
   displayName: 'Terraform Apply'
+
   dependsOn: Validate_Plan_SonarQube
+
   condition: succeeded()
 
   jobs:
 
   - deployment: TerraformApply
     displayName: 'Terraform Apply'
+
     environment: 'terraform-production'
 
     strategy:
