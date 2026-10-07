@@ -1,4 +1,3 @@
-```yaml
 trigger:
 - main
 
@@ -11,7 +10,7 @@ steps:
 - task: SonarQubePrepare@7
   displayName: 'Prepare SonarQube Analysis'
   inputs:
-    SonarQube: 'sonarqube'
+    SonarQube: 'sonarqube-connection'
     scannerMode: 'cli'
     configMode: 'manual'
     cliProjectKey: 'azure-terraform'
@@ -25,4 +24,4 @@ steps:
   displayName: 'Publish SonarQube Quality Gate'
   inputs:
     pollingTimeoutSec: '300'
-```
+
