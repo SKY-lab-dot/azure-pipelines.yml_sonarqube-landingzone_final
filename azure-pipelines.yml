@@ -20,10 +20,10 @@ stages:
 
     - checkout: self
 
-    # - task: TerraformInstaller@1
-    #   displayName: 'Install Terraform'
-    #   inputs:
-    #     terraformVersion: '1.16.5'
+    - task: TerraformInstaller@1
+      displayName: 'Install Terraform'
+      inputs:
+         terraformVersion: '1.16.5'
 
     - task: TerraformTask@5
       displayName: 'Terraform Init'
