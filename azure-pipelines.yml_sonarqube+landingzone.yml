@@ -66,7 +66,7 @@ stages:
             exit $LASTEXITCODE
         }
 
-      workingDirectory: '$(Build.SourcesDirectory)'
+      workingDirectory: '$(Build.SourcesDirectory)\azure-pipelines.yml_sonarqube\parent_module'
       displayName: 'Terraform Version'
 
     # ========================================================
@@ -133,7 +133,7 @@ stages:
 
         Write-Host "TFLint SUCCESS"
 
-      workingDirectory: '$(Build.SourcesDirectory)'
+      workingDirectory: '$(Build.SourcesDirectory)\azure-pipelines.yml_sonarqube\parent_module'
       displayName: 'TFLint Security Check'
 
     # ========================================================
@@ -198,7 +198,7 @@ stages:
 
         exit 0
 
-      workingDirectory: '$(Build.SourcesDirectory)'
+      workingDirectory: '$(Build.SourcesDirectory)\azure-pipelines.yml_sonarqube\parent_module'
       displayName: 'tfsec Security Scan'
 
     # --------------------------------------------------------
@@ -280,7 +280,7 @@ stages:
 
         Write-Host "Terraform Init SUCCESS"
 
-      workingDirectory: '$(Build.SourcesDirectory)'
+      workingDirectory: '$(Build.SourcesDirectory)\azure-pipelines.yml_sonarqube\parent_module'
       displayName: 'Terraform Init'
 
     # ========================================================
@@ -303,7 +303,7 @@ stages:
 
         Write-Host "Terraform Validate SUCCESS"
 
-      workingDirectory: '$(Build.SourcesDirectory)'
+      workingDirectory: '$(Build.SourcesDirectory)\azure-pipelines.yml_sonarqube\parent_module'
       displayName: 'Terraform Validate'
 
 
