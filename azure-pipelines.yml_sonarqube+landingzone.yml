@@ -7,9 +7,6 @@ pool:
 variables:
 - group: dev
 
-- name: TF_VERSION
-  value: '1.16.5'
-
 - name: TFLINT_VERSION
   value: '0.59.1'
 
@@ -48,7 +45,6 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           $repo = "$(Build.SourcesDirectory)"
 
           Write-Host "Repository:"
@@ -72,7 +68,7 @@ stages:
           Write-Host "##vso[task.setvariable variable=TerraformRoot]$($terraformRoot.FullName)"
 
     # --------------------------------------------------------
-    # SHOW TERRAFORM FILES
+    # VERIFY TERRAFORM FILES
     # --------------------------------------------------------
 
     - task: PowerShell@2
@@ -80,7 +76,6 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           Write-Host "Terraform Root: $(TerraformRoot)"
 
           Get-ChildItem "$(TerraformRoot)" -Recurse -Filter "*.tf" |
@@ -93,7 +88,7 @@ stages:
     # --------------------------------------------------------
 
     - task: TerraformInstaller@1
-      displayName: 'Install Terraform $(TF_VERSION)'
+      displayName: 'Install Terraform'
       inputs:
         terraformVersion: '$(TF_VERSION)'
 
@@ -106,7 +101,6 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           $terraform = "$(Agent.ToolsDirectory)\terraform\$(TF_VERSION)\x64\terraform.exe"
 
           if (-not (Test-Path $terraform)) {
@@ -125,7 +119,6 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           $version = "$(TFLINT_VERSION)"
 
           $toolsDir = "$(Agent.TempDirectory)\terraform-tools"
@@ -166,8 +159,6 @@ stages:
 
           Set-Location "$(TerraformRoot)"
 
-          Write-Host "Running TFLint..."
-
           & $tflint --init
 
           & $tflint --recursive
@@ -177,7 +168,7 @@ stages:
             exit 1
           }
 
-     # --------------------------------------------------------
+    # --------------------------------------------------------
     # TFSEC
     # --------------------------------------------------------
 
@@ -215,7 +206,6 @@ stages:
           $report = "$(Build.ArtifactStagingDirectory)\tfsec-junit.xml"
 
           Write-Host "Running tfsec..."
-          Write-Host "Terraform Root: $(TerraformRoot)"
 
           & $tfsec . `
             --format junit-xml `
@@ -233,7 +223,7 @@ stages:
             Write-Warning "tfsec report was not generated."
           }
 
-          Write-Warning "tfsec completed with exit code $tfsecExitCode. Continuing pipeline."
+          Write-Warning "tfsec completed. Continuing pipeline."
 
           exit 0
 
@@ -251,7 +241,7 @@ stages:
         failTaskOnFailedTests: false
 
     # --------------------------------------------------------
-    # TERRAFORM FMT
+    # TERRAFORM FORMAT
     # --------------------------------------------------------
 
     - task: PowerShell@2
@@ -259,18 +249,14 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           $terraform = "$(Agent.ToolsDirectory)\terraform\$(TF_VERSION)\x64\terraform.exe"
 
           Set-Location "$(TerraformRoot)"
-
-          Write-Host "Checking Terraform formatting..."
 
           & $terraform fmt -check -recursive
 
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Terraform formatting check failed."
-            Write-Host "Run: terraform fmt -recursive"
             exit 1
           }
 
@@ -315,14 +301,7 @@ stages:
         scriptType: 'ps'
         scriptLocation: 'inlineScript'
         inlineScript: |
-
           $terraform = "$(Agent.ToolsDirectory)\terraform\$(TF_VERSION)\x64\terraform.exe"
-
-          Write-Host "Terraform:"
-          & $terraform version
-
-          Write-Host "Terraform Root:"
-          Write-Host "$(TerraformRoot)"
 
           Set-Location "$(TerraformRoot)"
 
@@ -333,17 +312,19 @@ stages:
 
           & $terraform init `
             -reconfigure `
-            -backend-config="resource_group_name=$(BACKEND_RESOURCE_GROUP)" `
-            -backend-config="storage_account_name=$(BACKEND_STORAGE_ACCOUNT)" `
-            -backend-config="container_name=$(BACKEND_CONTAINER)" `
-            -backend-config="key=$(BACKEND_KEY)" `
-            -backend-config="subscription_id=$(BACKEND_SUBSCRIPTION_ID)" `
+            -backend-config="resource_group_name=$(resource_group_name)" `
+            -backend-config="storage_account_name=$(storage_account_name)" `
+            -backend-config="container_name=$(container_name)" `
+            -backend-config="key=$(key)" `
+            -backend-config="subscription_id=$(subscription_id)" `
             -backend-config="use_azuread_auth=true"
 
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Terraform init failed."
             exit 1
           }
+
+          Write-Host "Terraform Init successful."
 
           Write-Host "Running Terraform Validate..."
 
@@ -354,7 +335,8 @@ stages:
             exit 1
           }
 
-          Write-Host "Terraform validation successful."
+          Write-Host "Terraform Validate successful."
+
 
 # ============================================================
 # STAGE 2 - TERRAFORM PLAN
@@ -372,10 +354,6 @@ stages:
 
     steps:
 
-    # --------------------------------------------------------
-    # CHECKOUT
-    # --------------------------------------------------------
-
     - checkout: self
       clean: true
 
@@ -388,7 +366,6 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           $repo = "$(Build.SourcesDirectory)"
 
           $terraformRoot = Get-ChildItem -Path $repo -Directory -Recurse |
@@ -428,7 +405,6 @@ stages:
         scriptType: 'ps'
         scriptLocation: 'inlineScript'
         inlineScript: |
-
           $terraform = "$(Agent.ToolsDirectory)\terraform\$(TF_VERSION)\x64\terraform.exe"
 
           Set-Location "$(TerraformRoot)"
@@ -440,11 +416,11 @@ stages:
 
           & $terraform init `
             -reconfigure `
-            -backend-config="resource_group_name=$(BACKEND_RESOURCE_GROUP)" `
-            -backend-config="storage_account_name=$(BACKEND_STORAGE_ACCOUNT)" `
-            -backend-config="container_name=$(BACKEND_CONTAINER)" `
-            -backend-config="key=$(BACKEND_KEY)" `
-            -backend-config="subscription_id=$(BACKEND_SUBSCRIPTION_ID)" `
+            -backend-config="resource_group_name=$(resource_group_name)" `
+            -backend-config="storage_account_name=$(storage_account_name)" `
+            -backend-config="container_name=$(container_name)" `
+            -backend-config="key=$(key)" `
+            -backend-config="subscription_id=$(subscription_id)" `
             -backend-config="use_azuread_auth=true"
 
           if ($LASTEXITCODE -ne 0) {
@@ -477,6 +453,7 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)\terraform.tfplan'
         artifact: 'terraform-plan'
 
+
 # ============================================================
 # STAGE 3 - TERRAFORM APPLY
 # ============================================================
@@ -499,10 +476,6 @@ stages:
 
           steps:
 
-          # --------------------------------------------------
-          # CHECKOUT
-          # --------------------------------------------------
-
           - checkout: self
             clean: true
 
@@ -515,7 +488,6 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-
                 $repo = "$(Build.SourcesDirectory)"
 
                 $terraformRoot = Get-ChildItem -Path $repo -Directory -Recurse |
@@ -563,11 +535,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-
                 $plan = "$(Pipeline.Workspace)\terraform-plan\terraform.tfplan"
-
-                Write-Host "Checking plan:"
-                Write-Host $plan
 
                 if (-not (Test-Path $plan)) {
                   Write-Error "Terraform plan file not found."
@@ -587,7 +555,6 @@ stages:
               scriptType: 'ps'
               scriptLocation: 'inlineScript'
               inlineScript: |
-
                 $terraform = "$(Agent.ToolsDirectory)\terraform\$(TF_VERSION)\x64\terraform.exe"
 
                 Set-Location "$(TerraformRoot)"
@@ -599,11 +566,11 @@ stages:
 
                 & $terraform init `
                   -reconfigure `
-                  -backend-config="resource_group_name=$(BACKEND_RESOURCE_GROUP)" `
-                  -backend-config="storage_account_name=$(BACKEND_STORAGE_ACCOUNT)" `
-                  -backend-config="container_name=$(BACKEND_CONTAINER)" `
-                  -backend-config="key=$(BACKEND_KEY)" `
-                  -backend-config="subscription_id=$(BACKEND_SUBSCRIPTION_ID)" `
+                  -backend-config="resource_group_name=$(resource_group_name)" `
+                  -backend-config="storage_account_name=$(storage_account_name)" `
+                  -backend-config="container_name=$(container_name)" `
+                  -backend-config="key=$(key)" `
+                  -backend-config="subscription_id=$(subscription_id)" `
                   -backend-config="use_azuread_auth=true"
 
                 if ($LASTEXITCODE -ne 0) {
