@@ -10,17 +10,13 @@ variables:
 stages:
 
 # =====================================================
-# TERRAFORM VALIDATE / INIT
+# TERRAFORM
 # =====================================================
 
 - stage: Terraform
   displayName: 'Terraform Init and Validate'
 
   jobs:
-
-  # ---------------------------------------------------
-  # TERRAFORM JOB
-  # ---------------------------------------------------
 
   - job: TerraformJob
     displayName: 'Terraform'
@@ -44,7 +40,7 @@ stages:
         terraformVersion: '1.16.5'
 
     # -------------------------------------------------
-    # DEBUG TERRAFORM EXECUTABLE
+    # DEBUG TERRAFORM
     # -------------------------------------------------
 
     - powershell: |
@@ -53,7 +49,7 @@ stages:
         Write-Host "========================================"
 
         Write-Host "Agent.ToolsDirectory = $(Agent.ToolsDirectory)"
-        Write-Host "Agent.WorkFolder     = $(Agent.WorkFolder)"
+        Write-Host "Agent.WorkFolder = $(Agent.WorkFolder)"
         Write-Host "Build.SourcesDirectory = $(Build.SourcesDirectory)"
 
         Write-Host ""
@@ -82,11 +78,6 @@ stages:
         }
 
         Write-Host ""
-        Write-Host "Terraform file details:"
-        Get-Item -LiteralPath $tf |
-            Format-List FullName,Length,LastWriteTime
-
-        Write-Host ""
         Write-Host "Terraform version:"
 
         & $tf version
@@ -97,11 +88,17 @@ stages:
         }
 
         Write-Host ""
-        Write-Host "Terraform executable test SUCCESS"
+        Write-Host "Repository files:"
+        Get-ChildItem "$(Build.SourcesDirectory)"
+
+        Write-Host ""
+        Write-Host "Terraform files:"
+        Get-ChildItem "$(Build.SourcesDirectory)" -Filter "*.tf"
+
       displayName: 'Debug Terraform Executable'
 
     # -------------------------------------------------
-    # TERRAFORM INIT - DIRECT POWERSHELL
+    # TERRAFORM INIT
     # -------------------------------------------------
 
     - powershell: |
@@ -120,13 +117,12 @@ stages:
         }
 
         Write-Host ""
-        Write-Host "Current directory:"
+        Write-Host "Working directory:"
         Get-Location
 
         Write-Host ""
-        Write-Host "Terraform configuration files:"
-        Get-ChildItem -Path . -Filter "*.tf" |
-            Select-Object Name,Length
+        Write-Host "Terraform files:"
+        Get-ChildItem -Filter "*.tf"
 
         Write-Host ""
         Write-Host "Running Terraform Init..."
@@ -146,7 +142,8 @@ stages:
 
         Write-Host ""
         Write-Host "Terraform Init SUCCESS"
-      workingDirectory: '$(Build.SourcesDirectory)/dev'
+
+      workingDirectory: '$(Build.SourcesDirectory)'
       displayName: 'Terraform Init - Direct PowerShell'
 
     # -------------------------------------------------
@@ -171,5 +168,7 @@ stages:
 
         Write-Host ""
         Write-Host "Terraform Validate SUCCESS"
-      workingDirectory: '$(Build.SourcesDirectory)/dev'
+
+      workingDirectory: '$(Build.SourcesDirectory)'
       displayName: 'Terraform Validate'
+
