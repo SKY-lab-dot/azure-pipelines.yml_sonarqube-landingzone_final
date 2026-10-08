@@ -30,8 +30,6 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'init'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module/dev'
-        backendServiceArm: 'shailesh'
         backendAzureRmResourceGroupName: 'sit'
         backendAzureRmStorageAccountName: 'sitterraformstate2026'
         backendAzureRmContainerName: 'tfstate'
