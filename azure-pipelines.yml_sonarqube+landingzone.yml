@@ -397,6 +397,23 @@ stages:
     # --------------------------------------------------------
     # TERRAFORM PLAN
     # --------------------------------------------------------
+    - task: DownloadSecureFile@1
+      name: terraformVars
+      displayName: 'Download Terraform Variables'
+      inputs:
+        secureFile: 'terraform.tfvars'
+
+    - task: PowerShell@2
+      displayName: 'Prepare Terraform Variables'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Copy-Item `
+            "$(terraformVars.secureFilePath)" `
+            "$(TerraformRoot)\terraform.tfvars" `
+            -Force
+
+          Write-Host "terraform.tfvars prepared successfully."
 
     - task: AzureCLI@2
       displayName: 'Terraform Init and Plan'
