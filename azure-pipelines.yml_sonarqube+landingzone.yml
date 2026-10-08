@@ -36,7 +36,7 @@ stages:
     - task: TerraformInstaller@1
       displayName: 'Install Terraform'
       inputs:
-        terraformVersion: '1.16.4'
+        terraformVersion: '1.16.5'
 
     # -----------------------------------------------------
     # TEST TERRAFORM EXECUTABLE
@@ -47,7 +47,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          $tf = "$(Agent.ToolsDirectory)\terraform\1.16.4\x64\terraform.exe"
+          $tf = "$(Agent.ToolsDirectory)\terraform\1.16.5\x64\terraform.exe"
 
           Write-Host "Agent.ToolsDirectory = $(Agent.ToolsDirectory)"
           Write-Host "Terraform path = $tf"
@@ -169,7 +169,7 @@ stages:
           - task: TerraformInstaller@1
             displayName: 'Install Terraform'
             inputs:
-              terraformVersion: '1.16.4'
+              terraformVersion: '1.16.5'
 
           # ------------------------------------------------
           # TERRAFORM INIT
