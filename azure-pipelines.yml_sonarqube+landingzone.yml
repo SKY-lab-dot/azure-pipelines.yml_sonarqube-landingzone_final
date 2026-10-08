@@ -9,193 +9,167 @@ variables:
 
 stages:
 
-# =========================================================
-# STAGE 1: TERRAFORM VALIDATE + PLAN + SONARQUBE
-# =========================================================
+# =====================================================
+# TERRAFORM VALIDATE / INIT
+# =====================================================
 
-- stage: Validate_Plan_SonarQube
-  displayName: 'Terraform Validate, Plan & SonarQube'
+- stage: Terraform
+  displayName: 'Terraform Init and Validate'
 
   jobs:
 
-  - job: Terraform_SonarQube
-    displayName: 'Terraform + SonarQube'
+  # ---------------------------------------------------
+  # TERRAFORM JOB
+  # ---------------------------------------------------
+
+  - job: TerraformJob
+    displayName: 'Terraform'
 
     steps:
 
-    # -----------------------------------------------------
+    # -------------------------------------------------
     # CHECKOUT
-    # -----------------------------------------------------
+    # -------------------------------------------------
 
     - checkout: self
+      clean: true
 
-    # -----------------------------------------------------
-    # TERRAFORM INSTALLER
-    # -----------------------------------------------------
+    # -------------------------------------------------
+    # INSTALL TERRAFORM
+    # -------------------------------------------------
 
     - task: TerraformInstaller@1
-      displayName: 'Install Terraform'
+      displayName: 'Install Terraform 1.16.5'
       inputs:
         terraformVersion: '1.16.5'
 
-    # -----------------------------------------------------
-    # TEST TERRAFORM EXECUTABLE
-    # -----------------------------------------------------
+    # -------------------------------------------------
+    # DEBUG TERRAFORM EXECUTABLE
+    # -------------------------------------------------
 
-    - task: PowerShell@2
-      displayName: 'Test Terraform Executable'
-      inputs:
-        targetType: 'inline'
-        script: |
-          $tf = "$(Agent.ToolsDirectory)\terraform\1.16.5\x64\terraform.exe"
+    - powershell: |
+        Write-Host "========================================"
+        Write-Host "Agent Information"
+        Write-Host "========================================"
 
-          Write-Host "Agent.ToolsDirectory = $(Agent.ToolsDirectory)"
-          Write-Host "Terraform path = $tf"
+        Write-Host "Agent.ToolsDirectory = $(Agent.ToolsDirectory)"
+        Write-Host "Agent.WorkFolder     = $(Agent.WorkFolder)"
+        Write-Host "Build.SourcesDirectory = $(Build.SourcesDirectory)"
 
-          Write-Host "Checking Terraform file..."
-          Test-Path -LiteralPath $tf
+        Write-Host ""
+        Write-Host "Running user:"
+        whoami
 
-          Write-Host "Terraform file details..."
-          Get-Item -LiteralPath $tf | Format-List FullName,Length
+        Write-Host ""
+        Write-Host "========================================"
+        Write-Host "Terraform Information"
+        Write-Host "========================================"
 
-          Write-Host "Running Terraform version..."
-          & $tf version
+        $tf = "$(Agent.ToolsDirectory)\terraform\1.16.5\x64\terraform.exe"
 
-    # -----------------------------------------------------
-    # TERRAFORM INIT
-    # -----------------------------------------------------
+        Write-Host "Terraform path:"
+        Write-Host $tf
 
-    - task: TerraformTask@5
-      displayName: 'Terraform Init'
-      inputs:
-        provider: 'azurerm'
-        command: 'init'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-        backendServiceArm: 'shailesh'
-        backendAzureRmResourceGroupName: 'sit'
-        backendAzureRmStorageAccountName: 'sitterraformstate2026'
-        backendAzureRmContainerName: 'tfstate'
-        backendAzureRmKey: 'sit.terraform.tfstate'
+        Write-Host ""
+        Write-Host "Checking Terraform file..."
 
-    # -----------------------------------------------------
+        if (Test-Path -LiteralPath $tf) {
+            Write-Host "Terraform file EXISTS"
+        }
+        else {
+            Write-Error "Terraform file NOT FOUND"
+            exit 1
+        }
+
+        Write-Host ""
+        Write-Host "Terraform file details:"
+        Get-Item -LiteralPath $tf |
+            Format-List FullName,Length,LastWriteTime
+
+        Write-Host ""
+        Write-Host "Terraform version:"
+
+        & $tf version
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Terraform version command failed"
+            exit $LASTEXITCODE
+        }
+
+        Write-Host ""
+        Write-Host "Terraform executable test SUCCESS"
+      displayName: 'Debug Terraform Executable'
+
+    # -------------------------------------------------
+    # TERRAFORM INIT - DIRECT POWERSHELL
+    # -------------------------------------------------
+
+    - powershell: |
+        Write-Host "========================================"
+        Write-Host "Terraform Init"
+        Write-Host "========================================"
+
+        $terraform = "$(Agent.ToolsDirectory)\terraform\1.16.5\x64\terraform.exe"
+
+        Write-Host "Terraform executable:"
+        Write-Host $terraform
+
+        if (!(Test-Path -LiteralPath $terraform)) {
+            Write-Error "Terraform executable not found"
+            exit 1
+        }
+
+        Write-Host ""
+        Write-Host "Current directory:"
+        Get-Location
+
+        Write-Host ""
+        Write-Host "Terraform configuration files:"
+        Get-ChildItem -Path . -Filter "*.tf" |
+            Select-Object Name,Length
+
+        Write-Host ""
+        Write-Host "Running Terraform Init..."
+
+        & $terraform init `
+          "-backend-config=storage_account_name=sitterraformstate2026" `
+          "-backend-config=container_name=tfstate" `
+          "-backend-config=key=sit.terraform.tfstate" `
+          "-backend-config=resource_group_name=sit" `
+          "-backend-config=subscription_id=6670366d-32db-4180-a842-1ce1053317b7" `
+          "-backend-config=use_azuread_auth=true"
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Terraform init failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+        }
+
+        Write-Host ""
+        Write-Host "Terraform Init SUCCESS"
+      workingDirectory: '$(Build.SourcesDirectory)/dev'
+      displayName: 'Terraform Init - Direct PowerShell'
+
+    # -------------------------------------------------
     # TERRAFORM VALIDATE
-    # -----------------------------------------------------
+    # -------------------------------------------------
 
-    - task: TerraformTask@5
+    - powershell: |
+        Write-Host "========================================"
+        Write-Host "Terraform Validate"
+        Write-Host "========================================"
+
+        $terraform = "$(Agent.ToolsDirectory)\terraform\1.16.5\x64\terraform.exe"
+
+        Write-Host "Running Terraform Validate..."
+
+        & $terraform validate
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Terraform validate failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+        }
+
+        Write-Host ""
+        Write-Host "Terraform Validate SUCCESS"
+      workingDirectory: '$(Build.SourcesDirectory)/dev'
       displayName: 'Terraform Validate'
-      inputs:
-        provider: 'azurerm'
-        command: 'validate'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-
-    # -----------------------------------------------------
-    # TERRAFORM PLAN
-    # -----------------------------------------------------
-
-    - task: TerraformTask@5
-      displayName: 'Terraform Plan'
-      inputs:
-        provider: 'azurerm'
-        command: 'plan'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-        environmentServiceNameAzureRM: 'shailesh'
-        commandOptions: '-out=tfplan'
-
-    # -----------------------------------------------------
-    # SONARQUBE PREPARE
-    # -----------------------------------------------------
-
-    - task: SonarQubePrepare@7
-      displayName: 'Prepare SonarQube Analysis'
-      inputs:
-        SonarQube: 'sonarqube-connection'
-        scannerMode: 'cli'
-        configMode: 'manual'
-        cliProjectKey: 'azure-terraform'
-        cliProjectName: 'Azure Terraform'
-        cliSources: 'parent_module'
-
-    # -----------------------------------------------------
-    # SONARQUBE ANALYZE
-    # -----------------------------------------------------
-
-    - task: SonarQubeAnalyze@7
-      displayName: 'Run SonarQube Analysis'
-
-    # -----------------------------------------------------
-    # SONARQUBE QUALITY GATE
-    # -----------------------------------------------------
-
-    - task: SonarQubePublish@7
-      displayName: 'Publish SonarQube Quality Gate'
-      inputs:
-        pollingTimeoutSec: '300'
-
-
-# =========================================================
-# STAGE 2: TERRAFORM APPLY
-# =========================================================
-
-- stage: Terraform_Apply
-  displayName: 'Terraform Apply'
-
-  dependsOn: Validate_Plan_SonarQube
-
-  condition: succeeded()
-
-  jobs:
-
-  - deployment: TerraformApply
-    displayName: 'Terraform Apply'
-
-    environment: 'terraform-production'
-
-    strategy:
-      runOnce:
-        deploy:
-
-          steps:
-
-          # ------------------------------------------------
-          # CHECKOUT
-          # ------------------------------------------------
-
-          - checkout: self
-
-          # ------------------------------------------------
-          # TERRAFORM INSTALLER
-          # ------------------------------------------------
-
-          - task: TerraformInstaller@1
-            displayName: 'Install Terraform'
-            inputs:
-              terraformVersion: '1.16.5'
-
-          # ------------------------------------------------
-          # TERRAFORM INIT
-          # ------------------------------------------------
-
-          - task: TerraformTask@5
-            displayName: 'Terraform Init'
-            inputs:
-              provider: 'azurerm'
-              command: 'init'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              backendServiceArm: 'shailesh'
-              backendAzureRmResourceGroupName: 'sit'
-              backendAzureRmStorageAccountName: 'sitterraformstate2026'
-              backendAzureRmContainerName: 'tfstate'
-              backendAzureRmKey: 'sit.terraform.tfstate'
-
-          # ------------------------------------------------
-          # TERRAFORM APPLY
-          # ------------------------------------------------
-
-          - task: TerraformTask@5
-            displayName: 'Terraform Apply'
-            inputs:
-              provider: 'azurerm'
-              command: 'apply'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              environmentServiceNameAzureRM: 'shailesh'
-              commandOptions: '-auto-approve'
