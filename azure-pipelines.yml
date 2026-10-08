@@ -8,12 +8,12 @@ pool:
 
 stages:
 
-- stage: TerraformInit
-  displayName: 'Terraform Init'
+- stage: Terraform_Init
+  displayName: 'Terraform_Init'
 
   jobs:
 
-  - job: TerraformInitJob
+  - job: TerraformInit_Job
     displayName: 'Terraform Init Job'
 
     steps:
@@ -35,3 +35,23 @@ stages:
         backendAzureRmStorageAccountName: 'sitterraformstate2026'
         backendAzureRmContainerName: 'tfstate'
         backendAzureRmKey: 'sit.terraform.tfstate'
+
+- stage: terraform_plan
+  displayName: 'Terraform plan'
+
+  jobs:
+
+  - job: Terraform_plan
+    displayName: 'Terraform plan'
+
+    steps:
+
+    - checkout: self
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: 'latest'
+    - task: TerraformTask@5
+      inputs:
+       provider: 'azurerm'
+       command: 'plan'
+       environmentServiceNameAzureRM: 'shailesh'
