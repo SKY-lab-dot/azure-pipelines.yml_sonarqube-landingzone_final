@@ -30,6 +30,7 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module/dev'
         backendServiceArm: 'shailesh'
         backendAzureRmResourceGroupName: 'sit'
         backendAzureRmStorageAccountName: 'sitterraformstate2026'
@@ -50,6 +51,16 @@ stages:
     - task: TerraformInstaller@1
       inputs:
         terraformVersion: 'latest'
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module/dev'
+        backendServiceArm: 'shailesh'
+        backendAzureRmResourceGroupName: 'sit'
+        backendAzureRmStorageAccountName: 'sitterraformstate2026'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'sit.terraform.tfstate'
     - task: TerraformTask@5
       inputs:
        provider: 'azurerm'
