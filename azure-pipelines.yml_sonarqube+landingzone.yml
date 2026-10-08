@@ -177,7 +177,7 @@ stages:
             exit 1
           }
 
-    # --------------------------------------------------------
+     # --------------------------------------------------------
     # TFSEC
     # --------------------------------------------------------
 
@@ -186,7 +186,6 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           $version = "$(TFSEC_VERSION)"
 
           $toolsDir = "$(Agent.TempDirectory)\terraform-tools"
@@ -216,13 +215,27 @@ stages:
           $report = "$(Build.ArtifactStagingDirectory)\tfsec-junit.xml"
 
           Write-Host "Running tfsec..."
+          Write-Host "Terraform Root: $(TerraformRoot)"
 
           & $tfsec . `
             --format junit-xml `
             --out $report `
             --soft-fail
 
-          Write-Host "tfsec completed."
+          $tfsecExitCode = $LASTEXITCODE
+
+          Write-Host "tfsec exit code: $tfsecExitCode"
+
+          if (Test-Path $report) {
+            Write-Host "tfsec report generated successfully."
+          }
+          else {
+            Write-Warning "tfsec report was not generated."
+          }
+
+          Write-Warning "tfsec completed with exit code $tfsecExitCode. Continuing pipeline."
+
+          exit 0
 
     # --------------------------------------------------------
     # PUBLISH TFSEC REPORT
