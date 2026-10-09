@@ -44,7 +44,21 @@ stages:
           - task: TerraformInstaller@1
             inputs:
               terraformVersion: '1.16.5'
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.16.5'
 
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
+              backendServiceArm: 'shailesh'
+              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
+              backendAzureRmResourceGroupName: 'sit'
+              backendAzureRmStorageAccountName: 'sitterraformstate2026'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'sit.terraform.tfstate'
           - task: TerraformTask@5
             inputs:
               provider: 'azurerm'
