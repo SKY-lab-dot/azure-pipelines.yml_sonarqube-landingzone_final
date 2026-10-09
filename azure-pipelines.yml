@@ -25,7 +25,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/Azure_ado/parent_module'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
               backendServiceArm: 'shailesh'
               backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
               backendAzureRmResourceGroupName: 'sit'
@@ -49,7 +49,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'validate'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/Azure_ado/parent_module'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
 
   - stage: terraform_plan
     displayName: 'terraform plan'
@@ -67,7 +67,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/Azure_ado/parent_module'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
               backendServiceArm: 'shailesh'
               backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
               backendAzureRmResourceGroupName: 'sit'
@@ -79,7 +79,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'plan'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/Azure_ado/parent_module'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
               environmentServiceNameAzureRM: 'shailesh'
               environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
 
@@ -99,7 +99,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/Azure_ado/parent_module'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
               backendServiceArm: 'shailesh'
               backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
               backendAzureRmResourceGroupName: 'sit'
@@ -111,6 +111,6 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'apply'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/Azure_ado/parent_module'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
               environmentServiceNameAzureRM: 'shailesh'
               environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
