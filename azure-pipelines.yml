@@ -25,6 +25,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
               backendServiceArm: 'shailesh'
               backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
               backendAzureRmResourceGroupName: 'sit'
@@ -48,6 +49,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'validate'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
 
   - stage: terraform_plan
     displayName: 'terraform plan'
@@ -65,6 +67,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
               backendServiceArm: 'shailesh'
               backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
               backendAzureRmResourceGroupName: 'sit'
@@ -76,6 +79,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'plan'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
               environmentServiceNameAzureRM: 'shailesh'
               environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
 
@@ -95,6 +99,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
               backendServiceArm: 'shailesh'
               backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
               backendAzureRmResourceGroupName: 'sit'
@@ -106,5 +111,6 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'apply'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
               environmentServiceNameAzureRM: 'shailesh'
               environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
