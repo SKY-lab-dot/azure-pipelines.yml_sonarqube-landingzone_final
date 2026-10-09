@@ -25,6 +25,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
+              commandOptions: '-reconfigure'
               workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
               backendServiceArm: 'shailesh'
               backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
