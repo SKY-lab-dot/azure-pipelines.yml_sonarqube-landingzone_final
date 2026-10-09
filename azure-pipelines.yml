@@ -6,61 +6,105 @@ trigger:
 pool:
   name: Azurecicd
 
+variables:
+  - group: dev
+
 stages:
+  - stage: terrafrom_init
+    displayName: 'terraform init'
+    jobs:
+      - job: terrafrom_init
+        steps:
+          - checkout: self
 
-- stage: Terraform_Init
-  displayName: 'Terraform_Init'
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.16.5'
 
-  jobs:
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'shailesh'
+              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
+              backendAzureRmResourceGroupName: 'sit'
+              backendAzureRmStorageAccountName: 'sitterraformstate2026'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'sit.terraform.tfstate'
 
-  - job: TerraformInit_Job
-    displayName: 'Terraform Init Job'
+  - stage: terraform_validate
+    displayName: 'terraform validate'
+    dependsOn: terrafrom_init
+    jobs:
+      - job: terraform_validate
+        steps:
+          - checkout: self
 
-    steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.16.5'
 
-    - checkout: self
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
 
-    - task: TerraformInstaller@1
-      displayName: 'Install Terraform'
-      inputs:
-         terraformVersion: '1.16.5'
+  - stage: terraform_plan
+    displayName: 'terraform plan'
+    dependsOn: terraform_validate
+    jobs:
+      - job: terraform_plan
+        steps:
+          - checkout: self
 
-    - task: TerraformTask@5
-      displayName: 'Terraform Init'
-      inputs:
-        provider: 'azurerm'
-        command: 'init'
-        backendAzureRmResourceGroupName: 'sit'
-        backendAzureRmStorageAccountName: 'sitterraformstate2026'
-        backendAzureRmContainerName: 'tfstate'
-        backendAzureRmKey: 'sit.terraform.tfstate'
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.16.5'
 
-- stage: terraform_plan
-  displayName: 'Terraform plan'
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'shailesh'
+              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
+              backendAzureRmResourceGroupName: 'sit'
+              backendAzureRmStorageAccountName: 'sitterraformstate2026'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'sit.terraform.tfstate'
 
-  jobs:
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              environmentServiceNameAzureRM: 'shailesh'
+              environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
 
-  - job: Terraform_plan
-    displayName: 'Terraform plan'
+  - stage: terraform_apply
+    displayName: 'terraform apply'
+    dependsOn: terraform_plan
+    jobs:
+      - job: terraform_apply
+        steps:
+          - checkout: self
 
-    steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.16.5'
 
-    - checkout: self
-    - task: TerraformInstaller@1
-      inputs:
-        terraformVersion: 'latest'
-    - task: TerraformTask@5
-      inputs:
-        provider: 'azurerm'
-        command: 'init'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module/dev'
-        backendServiceArm: 'shailesh'
-        backendAzureRmResourceGroupName: 'sit'
-        backendAzureRmStorageAccountName: 'sitterraformstate2026'
-        backendAzureRmContainerName: 'tfstate'
-        backendAzureRmKey: 'sit.terraform.tfstate'
-    - task: TerraformTask@5
-      inputs:
-       provider: 'azurerm'
-       command: 'plan'
-       environmentServiceNameAzureRM: 'shailesh'
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'shailesh'
+              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
+              backendAzureRmResourceGroupName: 'sit'
+              backendAzureRmStorageAccountName: 'sitterraformstate2026'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'sit.terraform.tfstate'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              environmentServiceNameAzureRM: 'shailesh'
+              environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
