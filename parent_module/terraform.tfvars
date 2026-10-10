@@ -110,8 +110,8 @@ vm = {
     admin_username           = "azureadmin"
     admin_password           = "YourStrongPassword123!"
     nic_id                   = "sonarqube"
-    ssh_source_address       = "152.59.177.250/32"
-    sonarqube_source_address = "152.59.177.250/32"
+    ssh_source_address       = "117.99.82.237/32"
+    sonarqube_source_address = "117.99.82.237/32"
   }
 }
 
