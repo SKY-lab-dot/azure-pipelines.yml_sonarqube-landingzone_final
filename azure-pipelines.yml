@@ -161,13 +161,17 @@ stages:
 # ==========================================
 # STAGE 5: TERRAFORM APPLY
 # ==========================================
+
 - stage: terraform_apply
   displayName: 'Terraform Apply'
   dependsOn: terraform_plan
+  condition: succeeded()
+
   jobs:
     - deployment: terraform_apply
       displayName: 'Deploy Azure Infrastructure'
       environment: '$(TF_ENVIRONMENT)'
+
       strategy:
         runOnce:
           deploy:
