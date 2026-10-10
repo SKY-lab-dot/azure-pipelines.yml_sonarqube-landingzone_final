@@ -24,7 +24,16 @@ stages:
 
       steps:
         - checkout: self
-
+        
+        
+        - task: CmdLine@2
+          displayName: 'Find Terraform files'
+          inputs:
+            script: |
+              echo === Repository root ===
+              dir "$(Build.SourcesDirectory)"
+              echo === Terraform files ===
+              dir /s /b "$(Build.SourcesDirectory)\*.tf"
         - task: SonarQubePrepare@7
           displayName: 'Prepare SonarQube Analysis'
           inputs:
