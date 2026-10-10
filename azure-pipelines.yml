@@ -99,7 +99,7 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'init'
-            commandOptions: '-input=false'
+            commandOptions: '-input=false -reconfigure'
             workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
             backendType: 'azurerm'
             backendServiceArm: '$(TF_SERVICE_CONNECTION)'
@@ -140,7 +140,7 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'init'
-            commandOptions: '-input=false'
+            commandOptions: '-input=false -reconfigure'
             workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
             backendType: 'azurerm'
             backendServiceArm: '$(TF_SERVICE_CONNECTION)'
@@ -189,7 +189,7 @@ stages:
                 inputs:
                   provider: 'azurerm'
                   command: 'init'
-                  commandOptions: '-input=false'
+                  commandOptions: '-input=false -reconfigure'
                   workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
                   backendType: 'azurerm'
                   backendServiceArm: '$(TF_SERVICE_CONNECTION)'
