@@ -1,3 +1,4 @@
+
 trigger:
   branches:
     include:
@@ -10,125 +11,201 @@ variables:
   - group: dev
 
 stages:
-  - stage: terrafrom_init
-    displayName: 'terraform init'
-    jobs:
-      - job: terrafrom_init
-        steps:
-          - checkout: self
 
-          - task: TerraformInstaller@1
-            inputs:
-              terraformVersion: '1.16.5'
+# ==========================================
+# STAGE 1: SONARQUBE SCAN
+# ==========================================
+- stage: sonarqube_scan
+  displayName: 'SonarQube Scan'
 
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'init'
-              commandOptions: '-reconfigure'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              backendServiceArm: 'shailesh'
-              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
-              backendAzureRmResourceGroupName: 'sit'
-              backendAzureRmStorageAccountName: 'sitterraformstate2026'
-              backendAzureRmContainerName: 'tfstate'
-              backendAzureRmKey: 'sit.terraform.tfstate'
+  jobs:
+    - job: sonarqube_scan
+      displayName: 'Analyze Terraform Code'
 
-  - stage: terraform_validate
-    displayName: 'terraform validate'
-    dependsOn: terrafrom_init
-    jobs:
-      - job: terraform_validate
-        steps:
-          - checkout: self
+      steps:
+        - checkout: self
 
-          - task: TerraformInstaller@1
-            inputs:
-              terraformVersion: '1.16.5'
-          - task: TerraformInstaller@1
-            inputs:
-              terraformVersion: '1.16.5'
+        - task: SonarQubePrepare@7
+          displayName: 'Prepare SonarQube Analysis'
+          inputs:
+            SonarQube: 'sonarqube-connection'
+            scannerMode: 'cli'
+            configMode: 'manual'
+            cliProjectKey: '$(SONARQUBE_PROJECT_KEY)'
+            cliProjectName: '$(SONARQUBE_PROJECT_NAME)'
+            cliSources: '$(TF_WORKING_DIRECTORY)'
 
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'init'
-              commandOptions: '-reconfigure'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              backendServiceArm: 'shailesh'
-              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
-              backendAzureRmResourceGroupName: 'sit'
-              backendAzureRmStorageAccountName: 'sitterraformstate2026'
-              backendAzureRmContainerName: 'tfstate'
-              backendAzureRmKey: 'sit.terraform.tfstate'
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'validate'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
+        - task: SonarQubeAnalyze@7
+          displayName: 'Run SonarQube Analysis'
 
-  - stage: terraform_plan
-    displayName: 'terraform plan'
-    dependsOn: terraform_validate
-    jobs:
-      - job: terraform_plan
-        steps:
-          - checkout: self
+        - task: SonarQubePublish@7
+          displayName: 'Publish Quality Gate Result'
+          inputs:
+            pollingTimeoutSec: '300'
 
-          - task: TerraformInstaller@1
-            inputs:
-              terraformVersion: '1.16.5'
 
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'init'
-              commandOptions: '-reconfigure'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              backendServiceArm: 'shailesh'
-              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
-              backendAzureRmResourceGroupName: 'sit'
-              backendAzureRmStorageAccountName: 'sitterraformstate2026'
-              backendAzureRmContainerName: 'tfstate'
-              backendAzureRmKey: 'sit.terraform.tfstate'
+# ==========================================
+# STAGE 2: TERRAFORM INIT
+# ==========================================
+- stage: terraform_init
+  displayName: 'Terraform Init'
+  dependsOn: sonarqube_scan
 
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'plan'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              environmentServiceNameAzureRM: 'shailesh'
-              environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
+  jobs:
+    - job: terraform_init
+      displayName: 'Initialize Terraform'
 
-  - stage: terraform_apply
-    displayName: 'terraform apply'
-    dependsOn: terraform_plan
-    jobs:
-      - job: terraform_apply
-        steps:
-          - checkout: self
+      steps:
+        - checkout: self
 
-          - task: TerraformInstaller@1
-            inputs:
-              terraformVersion: '1.16.5'
+        - task: TerraformInstaller@1
+          displayName: 'Install Terraform'
+          inputs:
+            terraformVersion: '$(TF_VERSION)'
 
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'init'
-              commandOptions: '-reconfigure'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              backendServiceArm: 'shailesh'
-              backendAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
-              backendAzureRmResourceGroupName: 'sit'
-              backendAzureRmStorageAccountName: 'sitterraformstate2026'
-              backendAzureRmContainerName: 'tfstate'
-              backendAzureRmKey: 'sit.terraform.tfstate'
+        - task: TerraformTask@5
+          displayName: 'Terraform Init'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            commandOptions: '-input=false -reconfigure'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIRECTORY)'
+            backendServiceArm: '$(TF_SERVICE_CONNECTION)'
+            backendAzureRmOverrideSubscriptionID: '$(TF_SUBSCRIPTION_ID)'
+            backendAzureRmResourceGroupName: '$(TF_BACKEND_RESOURCE_GROUP)'
+            backendAzureRmStorageAccountName: '$(TF_BACKEND_STORAGE_ACCOUNT)'
+            backendAzureRmContainerName: '$(TF_BACKEND_CONTAINER)'
+            backendAzureRmKey: '$(TF_BACKEND_KEY)'
 
-          - task: TerraformTask@5
-            inputs:
-              provider: 'azurerm'
-              command: 'apply'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/parent_module'
-              environmentServiceNameAzureRM: 'shailesh'
-              environmentAzureRmOverrideSubscriptionID: '6670366d-32db-4180-a842-1ce1053317b7'
+
+# ==========================================
+# STAGE 3: TERRAFORM VALIDATE
+# ==========================================
+- stage: terraform_validate
+  displayName: 'Terraform Validate'
+  dependsOn: terraform_init
+
+  jobs:
+    - job: terraform_validate
+      displayName: 'Validate Terraform Configuration'
+
+      steps:
+        - checkout: self
+
+        - task: TerraformInstaller@1
+          displayName: 'Install Terraform'
+          inputs:
+            terraformVersion: '$(TF_VERSION)'
+
+        - task: TerraformTask@5
+          displayName: 'Terraform Init'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            commandOptions: '-input=false'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIRECTORY)'
+            backendServiceArm: '$(TF_SERVICE_CONNECTION)'
+            backendAzureRmOverrideSubscriptionID: '$(TF_SUBSCRIPTION_ID)'
+            backendAzureRmResourceGroupName: '$(TF_BACKEND_RESOURCE_GROUP)'
+            backendAzureRmStorageAccountName: '$(TF_BACKEND_STORAGE_ACCOUNT)'
+            backendAzureRmContainerName: '$(TF_BACKEND_CONTAINER)'
+            backendAzureRmKey: '$(TF_BACKEND_KEY)'
+
+        - task: TerraformTask@5
+          displayName: 'Terraform Validate'
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIRECTORY)'
+
+
+# ==========================================
+# STAGE 4: TERRAFORM PLAN
+# ==========================================
+- stage: terraform_plan
+  displayName: 'Terraform Plan'
+  dependsOn: terraform_validate
+
+  jobs:
+    - job: terraform_plan
+      displayName: 'Create Terraform Plan'
+
+      steps:
+        - checkout: self
+
+        - task: TerraformInstaller@1
+          displayName: 'Install Terraform'
+          inputs:
+            terraformVersion: '$(TF_VERSION)'
+
+        - task: TerraformTask@5
+          displayName: 'Terraform Init'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            commandOptions: '-input=false'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIRECTORY)'
+            backendServiceArm: '$(TF_SERVICE_CONNECTION)'
+            backendAzureRmOverrideSubscriptionID: '$(TF_SUBSCRIPTION_ID)'
+            backendAzureRmResourceGroupName: '$(TF_BACKEND_RESOURCE_GROUP)'
+            backendAzureRmStorageAccountName: '$(TF_BACKEND_STORAGE_ACCOUNT)'
+            backendAzureRmContainerName: '$(TF_BACKEND_CONTAINER)'
+            backendAzureRmKey: '$(TF_BACKEND_KEY)'
+
+        - task: TerraformTask@5
+          displayName: 'Terraform Plan'
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            commandOptions: '-input=false -var="sonarqube_source_address=$(SONARQUBE_SOURCE_ADDRESS)"'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIRECTORY)'
+            environmentServiceNameAzureRM: '$(TF_SERVICE_CONNECTION)'
+            environmentAzureRmOverrideSubscriptionID: '$(TF_SUBSCRIPTION_ID)'
+
+
+# ==========================================
+# STAGE 5: TERRAFORM APPLY
+# ==========================================
+- stage: terraform_apply
+  displayName: 'Terraform Apply'
+  dependsOn: terraform_plan
+
+  jobs:
+    - deployment: terraform_apply
+      displayName: 'Deploy Azure Infrastructure'
+      environment: '$(TF_ENVIRONMENT)'
+
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - checkout: self
+
+              - task: TerraformInstaller@1
+                displayName: 'Install Terraform'
+                inputs:
+                  terraformVersion: '$(TF_VERSION)'
+
+              - task: TerraformTask@5
+                displayName: 'Terraform Init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  commandOptions: '-input=false'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIRECTORY)'
+                  backendServiceArm: '$(TF_SERVICE_CONNECTION)'
+                  backendAzureRmOverrideSubscriptionID: '$(TF_SUBSCRIPTION_ID)'
+                  backendAzureRmResourceGroupName: '$(TF_BACKEND_RESOURCE_GROUP)'
+                  backendAzureRmStorageAccountName: '$(TF_BACKEND_STORAGE_ACCOUNT)'
+                  backendAzureRmContainerName: '$(TF_BACKEND_CONTAINER)'
+                  backendAzureRmKey: '$(TF_BACKEND_KEY)'
+
+              - task: TerraformTask@5
+                displayName: 'Terraform Apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  commandOptions: '-input=false -var="sonarqube_source_address=$(SONARQUBE_SOURCE_ADDRESS)"'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/$(TF_WORKING_DIRECTORY)'
+                  environmentServiceNameAzureRM: '$(TF_SERVICE_CONNECTION)'
+                  environmentAzureRmOverrideSubscriptionID: '$(TF_SUBSCRIPTION_ID)'
