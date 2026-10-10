@@ -48,7 +48,6 @@ stages:
 - stage: terraform_init
   displayName: 'Terraform Init'
   dependsOn: sonarqube_scan
-
   jobs:
     - job: terraform_init
       displayName: 'Initialize Terraform'
@@ -82,7 +81,6 @@ stages:
 - stage: terraform_validate
   displayName: 'Terraform Validate'
   dependsOn: terraform_init
-
   jobs:
     - job: terraform_validate
       displayName: 'Validate Terraform Configuration'
@@ -123,7 +121,6 @@ stages:
 - stage: terraform_plan
   displayName: 'Terraform Plan'
   dependsOn: terraform_validate
-
   jobs:
     - job: terraform_plan
       displayName: 'Create Terraform Plan'
@@ -140,8 +137,7 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'init'
-            
-            commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)" -var="ssh_source_address=$(TF_VAR_ssh_source_address)"'
+            commandOptions: '-input=false -reconfigure'
             workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
             backendType: 'azurerm'
             backendServiceArm: '$(TF_SERVICE_CONNECTION)'
@@ -156,7 +152,7 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'plan'
-            commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)"'
+            commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)" -var="ssh_source_address=$(TF_VAR_ssh_source_address)"'
             workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
             environmentServiceNameAzureRM: '$(TF_SERVICE_CONNECTION)'
             environmentAzureRmOverrideSubscriptionID: '$(subscription_id)'
@@ -168,12 +164,10 @@ stages:
 - stage: terraform_apply
   displayName: 'Terraform Apply'
   dependsOn: terraform_plan
-
   jobs:
     - deployment: terraform_apply
       displayName: 'Deploy Azure Infrastructure'
       environment: '$(TF_ENVIRONMENT)'
-
       strategy:
         runOnce:
           deploy:
@@ -190,8 +184,7 @@ stages:
                 inputs:
                   provider: 'azurerm'
                   command: 'init'
-                  
-                  commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)" -var="ssh_source_address=$(TF_VAR_ssh_source_address)"'
+                  commandOptions: '-input=false -reconfigure'
                   workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
                   backendType: 'azurerm'
                   backendServiceArm: '$(TF_SERVICE_CONNECTION)'
@@ -206,7 +199,7 @@ stages:
                 inputs:
                   provider: 'azurerm'
                   command: 'apply'
-                  commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)"'
+                  commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)" -var="ssh_source_address=$(TF_VAR_ssh_source_address)"'
                   workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
                   environmentServiceNameAzureRM: '$(TF_SERVICE_CONNECTION)'
                   environmentAzureRmOverrideSubscriptionID: '$(subscription_id)'
