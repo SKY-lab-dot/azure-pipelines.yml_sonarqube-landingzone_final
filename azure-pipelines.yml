@@ -24,15 +24,15 @@ stages:
 
       steps:
         - checkout: self
-        
-        
-        
-        - task: CmdLine@2
-          displayName: 'Locate Terraform files'
+        - task: SonarQubePrepare@7
+          displayName: 'Prepare SonarQube Analysis'
           inputs:
-            script: |
-              echo Repository: $(Build.SourcesDirectory)
-              dir /s /b "$(Build.SourcesDirectory)\*.tf"
+            SonarQube: 'sonarqube-connection'
+            scannerMode: 'cli'
+            configMode: 'manual'
+            cliProjectKey: 'terraform-landing-zone'
+            cliProjectName: 'Terraform Landing Zone'
+            cliSources: 'parent_module'
         - task: SonarQubePrepare@7
           displayName: 'Prepare SonarQube Analysis'
           inputs:
