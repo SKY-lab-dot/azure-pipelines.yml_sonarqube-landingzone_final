@@ -140,7 +140,8 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'init'
-            commandOptions: '-input=false -reconfigure'
+            
+            commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)" -var="ssh_source_address=$(TF_VAR_ssh_source_address)"'
             workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
             backendType: 'azurerm'
             backendServiceArm: '$(TF_SERVICE_CONNECTION)'
@@ -189,7 +190,8 @@ stages:
                 inputs:
                   provider: 'azurerm'
                   command: 'init'
-                  commandOptions: '-input=false -reconfigure'
+                  
+                  commandOptions: '-input=false -var="sonarqube_source_address=$(TF_VAR_sonarqube_source_address)" -var="ssh_source_address=$(TF_VAR_ssh_source_address)"'
                   workingDirectory: '$(Build.SourcesDirectory)/$(TF_WORKING_DIRECTORY)'
                   backendType: 'azurerm'
                   backendServiceArm: '$(TF_SERVICE_CONNECTION)'
